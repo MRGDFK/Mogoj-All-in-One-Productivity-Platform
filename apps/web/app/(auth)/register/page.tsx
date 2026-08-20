@@ -1,0 +1,91 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { registerSchema } from "@mogoj/shared";
+import { useRegister } from "@/hooks/useAuth";
+import { getApiErrorMessage } from "@/lib/api";
+import { Button } from "@/components/shared/Button";
+import { Input } from "@/components/shared/Input";
+import { Label } from "@/components/shared/Label";
+
+export default function RegisterPage() {
+  const router = useRouter();
+  const register = useRegister();
+
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+
+    const parsed = registerSchema.safeParse({ name, email, password });
+    if (!parsed.success) {
+      setError(parsed.error.issues[0]?.message ?? "Invalid input");
+      return;
+    }
+
+    try {
+      await register.mutateAsync(parsed.data);
+      router.push("/");
+    } catch (err) {
+      setError(getApiErrorMessage(err));
+    }
+  }
+
+  return (
+    <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
+      <h1 className="text-lg font-semibold">Create your account</h1>
+      <p className="mt-1 text-sm text-muted-foreground">
+        Set up your PARA workspace in a few seconds.
+      </p>
+
+      <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+        <div className="space-y-1.5">
+          <Label htmlFor="name">Name</Label>
+          <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="email">Email</Label>
+          <Input
+            id="email"
+            type="email"
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="password">Password</Label>
+          <Input
+            id="password"
+            type="password"
+            autoComplete="new-password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+          <p className="text-xs text-muted-foreground">At least 8 characters.</p>
+        </div>
+
+        {error && <p className="text-sm text-destructive">{error}</p>}
+
+        <Button type="submit" className="w-full" disabled={register.isPending}>
+          {register.isPending ? "Creating account…" : "Create account"}
+        </Button>
+      </form>
+
+      <p className="mt-6 text-center text-sm text-muted-foreground">
+        Already have an account?{" "}
+        <Link href="/login" className="font-medium text-primary hover:underline">
+          Log in
+        </Link>
+      </p>
+    </div>
+  );
+}

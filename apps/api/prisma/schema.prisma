@@ -1,0 +1,271 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Enums (kept in sync with packages/shared/src/constants/enums.ts)
+// ---------------------------------------------------------------------------
+
+enum AreaStatus {
+  active
+  archived
+}
+
+enum ProjectStatus {
+  active
+  on_hold
+  completed
+  archived
+}
+
+enum TaskStatus {
+  todo
+  in_progress
+  in_review
+  done
+}
+
+enum Priority {
+  low
+  medium
+  high
+  critical
+}
+
+enum ResourceType {
+  note
+  pdf
+  link
+  image
+}
+
+enum InboxType {
+  task
+  project
+  note
+  idea
+}
+
+enum InboxStatus {
+  captured
+  processed
+}
+
+enum EntityType {
+  task
+  project
+  area
+  resource
+  inbox
+}
+
+enum ActivityAction {
+  created
+  updated
+  deleted
+  archived
+  moved
+  completed
+  promoted
+}
+
+// ---------------------------------------------------------------------------
+// Models
+// ---------------------------------------------------------------------------
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  avatar       String?
+  preferences  Json     @default("{}")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  areas         Area[]
+  projects      Project[]
+  tasks         Task[]
+  resources     Resource[]
+  inboxItems    InboxItem[]
+  activityLogs  ActivityLog[]
+  refreshTokens RefreshToken[]
+
+  @@map("users")
+}
+
+// Persisted so refresh tokens can be rotated and revoked server-side, and
+// reuse of an already-rotated token can be detected (indicates theft).
+model RefreshToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+model Area {
+  id          String     @id @default(cuid())
+  userId      String
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  color       String     @default("#6366f1")
+  icon        String     @default("folder")
+  status      AreaStatus @default(active)
+  order       Float      @default(0)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  projects  Project[]
+  tasks     Task[]
+  resources Resource[] @relation("ResourceAreas")
+
+  @@index([userId, status])
+  @@map("areas")
+}
+
+model Project {
+  id          String        @id @default(cuid())
+  userId      String
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  areaId      String
+  area        Area          @relation(fields: [areaId], references: [id], onDelete: Restrict)
+  name        String
+  description String?
+  color       String        @default("#6366f1")
+  icon        String        @default("rocket")
+  status      ProjectStatus @default(active)
+  priority    Priority      @default(medium)
+  startDate   DateTime?
+  endDate     DateTime?
+  coverImage  String?
+  order       Float         @default(0)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  tasks     Task[]
+  resources Resource[]
+
+  promotedFromInboxItem InboxItem? @relation("PromotedProject")
+
+  @@index([userId, status])
+  @@index([areaId])
+  @@map("projects")
+}
+
+model Task {
+  id     String  @id @default(cuid())
+  userId String
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // A task belongs to a project OR directly to an area (enforced in the
+  // service layer / Zod schema — Prisma has no portable CHECK constraint).
+  projectId String?
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  areaId    String?
+  area      Area?    @relation(fields: [areaId], references: [id], onDelete: Cascade)
+
+  // Self-relation for subtasks. Nesting is capped at one level in the
+  // service layer — a task whose parentTaskId is set cannot itself be a parent.
+  parentTaskId String?
+  parentTask   Task?   @relation("TaskSubtasks", fields: [parentTaskId], references: [id], onDelete: Cascade)
+  subtasks     Task[]  @relation("TaskSubtasks")
+
+  title       String
+  description Json?
+  status      TaskStatus @default(todo)
+  priority    Priority   @default(medium)
+  dueDate     DateTime?
+  startDate   DateTime?
+  tags        String[]   @default([])
+  order       Float      @default(0)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  promotedFromInboxItem InboxItem? @relation("PromotedTask")
+
+  @@index([userId, status])
+  @@index([projectId])
+  @@index([areaId])
+  @@index([parentTaskId])
+  @@index([dueDate])
+  @@map("tasks")
+}
+
+model Resource {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  projectId String?
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  // A resource can be tagged to multiple areas at once, independent of its
+  // project (unlike Task, where areaId mirrors the project's single area).
+  areas     Area[]   @relation("ResourceAreas")
+
+  title     String
+  type      ResourceType
+  content   Json?
+  url       String?
+  tags      String[]     @default([])
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  promotedFromInboxItem InboxItem? @relation("PromotedResource")
+
+  @@index([userId])
+  @@index([projectId])
+  @@map("resources")
+}
+
+model InboxItem {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title  String
+  body   Json?
+  type   InboxType   @default(task)
+  status InboxStatus @default(captured)
+
+  processedAt           DateTime?
+  promotedToTaskId      String?   @unique
+  promotedToTask        Task?     @relation("PromotedTask", fields: [promotedToTaskId], references: [id], onDelete: SetNull)
+  promotedToProjectId   String?   @unique
+  promotedToProject     Project?  @relation("PromotedProject", fields: [promotedToProjectId], references: [id], onDelete: SetNull)
+  promotedToResourceId  String?   @unique
+  promotedToResource    Resource? @relation("PromotedResource", fields: [promotedToResourceId], references: [id], onDelete: SetNull)
+
+  attachments String[] @default([])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId, status])
+  @@map("inbox_items")
+}
+
+model ActivityLog {
+  id         String         @id @default(cuid())
+  userId     String
+  user       User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  entityType EntityType
+  entityId   String
+  action     ActivityAction
+  metadata   Json?
+  createdAt  DateTime       @default(now())
+
+  @@index([userId, createdAt])
+  @@index([entityType, entityId])
+  @@map("activity_logs")
+}

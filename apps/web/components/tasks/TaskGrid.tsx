@@ -1,0 +1,23 @@
+"use client";
+
+import type { Task } from "@mogoj/shared";
+import { ListTodo } from "lucide-react";
+import { Loader } from "@/components/shared/Loader";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { TaskCard } from "@/components/tasks/TaskCard";
+
+export function TaskGrid({ tasks, isLoading }: { tasks: Task[] | undefined; isLoading: boolean }) {
+  if (isLoading) return <Loader label="Loading tasks…" />;
+
+  if (!tasks || tasks.length === 0) {
+    return <EmptyState icon={ListTodo} title="No tasks found" description="Try adjusting your filters." />;
+  }
+
+  return (
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {tasks.map((task) => (
+        <TaskCard key={task.id} task={task} />
+      ))}
+    </div>
+  );
+}
