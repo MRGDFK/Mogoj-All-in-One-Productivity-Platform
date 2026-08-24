@@ -1,31 +1,51 @@
 "use client";
 
-import { use, useMemo, useState } from "react";
+import { use, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { Calendar, CircleDot, Flag, Trash2, FileText } from "lucide-react";
+import { ArrowLeft, Calendar, Columns3, Flag, Layers, List, Plus, Trash2, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
-import type { ProjectStatus, Task, TaskStatus } from "@mogoj/shared";
+import type { Priority, ProjectStatus, Task, TaskStatus } from "@mogoj/shared";
 import { useProject, useDeleteProject, useUpdateProject, useProjectKanban } from "@/hooks/useProjects";
 import { useTasks, useMoveTask, useDeleteTask } from "@/hooks/useTasks";
 import { useResources } from "@/hooks/useResources";
+import { useAreas } from "@/hooks/useAreas";
 import { useUIStore } from "@/store/useUIStore";
 import { getApiErrorMessage } from "@/lib/api";
+import { getDeadlineDisplay } from "@/lib/deadline";
 import { matchesRelativeDate, RELATIVE_DATE_OPTIONS } from "@/lib/relativeDate";
 import { PRIORITY_ORDER, sortItems } from "@/lib/sort";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Button } from "@/components/shared/Button";
 import { Loader } from "@/components/shared/Loader";
-import { EmptyState } from "@/components/shared/EmptyState";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/shared/Select";
+import { Textarea } from "@/components/shared/Textarea";
 import { FilterPopover, type FilterFieldConfig, type FilterState } from "@/components/shared/FilterPopover";
 import { SortPopover, type SortValue } from "@/components/shared/SortPopover";
+import { ViewToggle, type ViewToggleOption } from "@/components/shared/ViewToggle";
+import { AnimatedViewSwitch } from "@/components/shared/AnimatedViewSwitch";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/shared/Tabs";
 import { KanbanBoard } from "@/components/projects/KanbanBoard";
 import { TaskKanbanCardContent } from "@/components/projects/TaskKanbanCardContent";
 import { TASK_COLUMN_VISUALS, TASK_KANBAN_COLUMNS } from "@/components/projects/kanbanColumns";
 import { TaskList } from "@/components/tasks/TaskList";
+import { NewTaskModal } from "@/components/tasks/NewTaskModal";
+import { NewResourceModal } from "@/components/resources/NewResourceModal";
+import { ProjectResources } from "@/components/projects/ProjectResources";
+import { ProjectNotes } from "@/components/projects/ProjectNotes";
+import { IconPicker } from "@/components/shared/IconPicker";
+import { EntityIcon } from "@/components/shared/EntityIcon";
+import { PropertyRow } from "@/components/shared/PropertyRow";
+import { FolderKanban } from "lucide-react";
+import { PriorityIcon, PRIORITY_LABELS } from "@/components/shared/PriorityIcon";
 import { cn } from "@/lib/utils";
+
+const PRIORITY_TRIGGER_CLASSES: Record<Priority, string> = {
+  low: "border-green-200 text-green-700 bg-green-50/80",
+  medium: "border-amber-200 text-amber-700 bg-amber-50/80",
+  high: "border-orange-200 text-orange-700 bg-orange-50/80",
+  critical: "border-red-300 text-red-700 bg-red-50/80 font-semibold",
+};
 
 const SORT_FIELDS = [
   { label: "Due Date", value: "dueDate" },
@@ -48,8 +68,12 @@ const STATUS_OPTIONS = [
   { label: "Done", value: "done" },
 ];
 
-const TABS = ["kanban", "list", "resources"] as const;
-type Tab = (typeof TABS)[number];
+type TaskViewMode = "kanban" | "list";
+
+const TASK_VIEW_OPTIONS: ViewToggleOption<TaskViewMode>[] = [
+  { value: "kanban", label: "Kanban", icon: Columns3 },
+  { value: "list", label: "List", icon: List },
+];
 
 export default function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -58,13 +82,18 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
   const updateProject = useUpdateProject(id);
   const deleteProject = useDeleteProject();
   const { data: resources } = useResources({ projectId: id });
+  const { data: areas } = useAreas({ status: "active" });
   const openTaskDetail = useUIStore((s) => s.openTaskDetail);
 
-  const [tab, setTab] = useState<Tab>("kanban");
+  const [activeTab, setActiveTab] = useState("tasks");
+  const [taskView, setTaskView] = useState<TaskViewMode>("kanban");
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
   const [filters, setFilters] = useState<FilterState>({});
   const [sort, setSort] = useState<SortValue>({ field: "dueDate", direction: "asc" });
+  const [newTaskOpen, setNewTaskOpen] = useState(false);
+  const [newResourceOpen, setNewResourceOpen] = useState(false);
+  const descriptionSaveTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { data: kanbanColumns, isLoading: kanbanLoading } = useProjectKanban(id);
   const kanbanTasks = useMemo(
@@ -87,7 +116,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
         valueOptions: RELATIVE_DATE_OPTIONS.map((option) => ({ label: option.label, value: option.value })),
       },
       { key: "priority", label: "Priority", icon: Flag, placeholder: "Any priority", valueOptions: PRIORITY_OPTIONS },
-      { key: "status", label: "Status", icon: CircleDot, placeholder: "Any status", valueOptions: STATUS_OPTIONS },
+      { key: "status", label: "Status", icon: List, placeholder: "Any status", valueOptions: STATUS_OPTIONS },
     ],
     [],
   );
@@ -150,11 +179,43 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
     }
   }
 
+  function handleDescriptionChange(value: string) {
+    if (descriptionSaveTimeout.current) clearTimeout(descriptionSaveTimeout.current);
+    descriptionSaveTimeout.current = setTimeout(() => {
+      updateProject.mutate({ description: value });
+    }, 800);
+  }
+
+  const totalTasks = project.totalTasks ?? 0;
+  const completedTasks = project.completedTasks ?? 0;
+  const progressPct = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+  const startDateValue = project.startDate ? project.startDate.slice(0, 10) : "";
+  const endDateValue = project.endDate ? project.endDate.slice(0, 10) : "";
+  const deadline = getDeadlineDisplay(project.endDate);
+
   return (
     <div>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="-ml-2 mb-2 h-8 text-xs text-muted-foreground"
+        onClick={() => router.back()}
+      >
+        <ArrowLeft className="mr-1 h-3.5 w-3.5" />
+        Back
+      </Button>
+
       <PageHeader
         title={project.name}
-        description={project.description ?? undefined}
+        icon={
+          <IconPicker
+            icon={project.icon}
+            color={project.color}
+            triggerSize={44}
+            fallback={FolderKanban}
+            onChange={(next) => updateProject.mutate(next)}
+          />
+        }
         actions={
           <>
             <Select
@@ -179,65 +240,166 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
         }
       />
 
-      <div className="mb-4 flex gap-1 border-b border-border">
-        {TABS.map((t) => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={cn(
-              "border-b-2 px-3 py-2 text-sm font-medium capitalize transition-colors",
-              tab === t
-                ? "border-primary text-foreground"
-                : "border-transparent text-muted-foreground hover:text-foreground",
-            )}
-          >
-            {t}
-          </button>
-        ))}
+      {/* Properties */}
+      <div className="mb-4 rounded-xl border border-border/60 bg-card">
+        <PropertyRow icon={Layers} label="Area">
+          <Select value={project.areaId} onValueChange={(v) => updateProject.mutate({ areaId: v })}>
+            <SelectTrigger className="h-8 w-full max-w-xs border-none bg-transparent px-1 text-sm font-medium shadow-none">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {areas?.map((area) => (
+                <SelectItem key={area.id} value={area.id}>
+                  <span className="flex items-center gap-1.5">
+                    <EntityIcon icon={area.icon} color={area.color} size={13} />
+                    {area.name}
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </PropertyRow>
+
+        <PropertyRow icon={Flag} label="Priority">
+          <Select value={project.priority} onValueChange={(v) => updateProject.mutate({ priority: v as Priority })}>
+            <SelectTrigger
+              className={cn("h-8 w-full max-w-xs px-2 text-sm font-medium", PRIORITY_TRIGGER_CLASSES[project.priority])}
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {(["low", "medium", "high", "critical"] as Priority[]).map((p) => (
+                <SelectItem key={p} value={p}>
+                  <span className="flex items-center gap-1.5">
+                    <PriorityIcon priority={p} />
+                    {PRIORITY_LABELS[p]}
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </PropertyRow>
+
+        <PropertyRow icon={Calendar} label="Start Date">
+          <input
+            type="date"
+            value={startDateValue}
+            onChange={(e) =>
+              updateProject.mutate({ startDate: e.target.value ? new Date(`${e.target.value}T12:00:00Z`) : null })
+            }
+            className="border-none bg-transparent p-0 text-sm font-medium outline-none"
+          />
+        </PropertyRow>
+
+        <PropertyRow icon={Calendar} label="Due Date">
+          <div className="flex items-center gap-2">
+            <input
+              type="date"
+              value={endDateValue}
+              onChange={(e) =>
+                updateProject.mutate({ endDate: e.target.value ? new Date(`${e.target.value}T12:00:00Z`) : null })
+              }
+              className="border-none bg-transparent p-0 text-sm font-medium outline-none"
+            />
+            {deadline && <span className="text-xs text-muted-foreground">({deadline.label})</span>}
+          </div>
+        </PropertyRow>
+
+        <PropertyRow icon={TrendingUp} label="Progress">
+          <div className="flex max-w-xs flex-col gap-1">
+            <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+              <div className="h-full bg-emerald-500" style={{ width: `${progressPct}%` }} />
+            </div>
+            <span className="text-xs text-muted-foreground">
+              {totalTasks > 0 ? `${progressPct}% · ${completedTasks}/${totalTasks} tasks` : "No tasks"}
+            </span>
+          </div>
+        </PropertyRow>
       </div>
 
-      {tab !== "resources" && (
-        <div className="mb-4 flex justify-end gap-2">
-          <FilterPopover fields={filterFields} value={filters} onChange={setFilters} />
-          <SortPopover fieldOptions={SORT_FIELDS} value={sort} onChange={setSort} />
-        </div>
-      )}
+      {/* Description */}
+      <Textarea
+        defaultValue={project.description ?? ""}
+        onChange={(e) => handleDescriptionChange(e.target.value)}
+        placeholder="Add a description…"
+        rows={2}
+        className="mb-4 -ml-2 resize-none border-transparent bg-transparent p-2 text-sm text-foreground shadow-none transition-colors hover:bg-muted/20 focus-visible:border-border/60 focus-visible:bg-background focus-visible:ring-0"
+      />
 
-      {tab === "kanban" && (
-        <KanbanBoard
-          items={visibleKanbanTasks}
-          isLoading={kanbanLoading}
-          statuses={TASK_KANBAN_COLUMNS}
-          visuals={TASK_COLUMN_VISUALS}
-          getStatus={(task) => task.status}
-          withStatus={(task, status, order) => ({ ...task, status, order })}
-          onMove={handleMoveTask}
-          renderContent={(task) => <TaskKanbanCardContent task={task} />}
-          onOpen={(task) => openTaskDetail(task.id)}
-          onDelete={(task) => setTaskToDelete(task)}
-          emptyLabel="No tasks"
-        />
-      )}
-      {tab === "list" && <TaskList tasks={visibleListTasks} isLoading={listLoading} />}
-      {tab === "resources" &&
-        (resources && resources.length > 0 ? (
-          <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {resources.map((resource) => (
-              <li key={resource.id}>
-                <Link
-                  href={`/resources/${resource.id}`}
-                  className="flex items-center gap-2 rounded-md border border-border p-3 text-sm hover:bg-accent"
-                >
-                  <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
-                  <span className="truncate">{resource.title}</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <EmptyState icon={FileText} title="No resources yet" />
-        ))}
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="mb-4 w-full justify-start border-b border-border/60">
+          <TabsTrigger value="tasks" badge={totalTasks}>
+            Tasks
+          </TabsTrigger>
+          <TabsTrigger value="notes">Notes</TabsTrigger>
+          <TabsTrigger value="resources" badge={resources?.length ?? 0}>
+            Resources
+          </TabsTrigger>
+        </TabsList>
 
+        {/* Tasks Tab Content */}
+        <TabsContent value="tasks">
+          <div className="mb-4 flex items-center justify-between gap-2">
+            <ViewToggle value={taskView} onChange={setTaskView} options={TASK_VIEW_OPTIONS} />
+            <div className="flex gap-2">
+              <FilterPopover fields={filterFields} value={filters} onChange={setFilters} />
+              <SortPopover fieldOptions={SORT_FIELDS} value={sort} onChange={setSort} />
+              <Button size="sm" onClick={() => setNewTaskOpen(true)}>
+                <Plus className="h-4 w-4" />
+                New Task
+              </Button>
+            </div>
+          </div>
+
+          <AnimatedViewSwitch index={taskView === "kanban" ? 0 : 1}>
+            {[
+              <KanbanBoard
+                key="kanban"
+                items={visibleKanbanTasks}
+                isLoading={kanbanLoading}
+                statuses={TASK_KANBAN_COLUMNS}
+                visuals={TASK_COLUMN_VISUALS}
+                getStatus={(task) => task.status}
+                withStatus={(task, status, order) => ({ ...task, status, order })}
+                onMove={handleMoveTask}
+                renderContent={(task) => (
+                  <TaskKanbanCardContent task={task} onTitleClick={() => openTaskDetail(task.id)} />
+                )}
+                onOpen={(task) => openTaskDetail(task.id)}
+                onDelete={(task) => setTaskToDelete(task)}
+                emptyLabel="No tasks"
+              />,
+              <TaskList
+                key="list"
+                tasks={visibleListTasks}
+                isLoading={listLoading}
+                onTaskClick={(task) => openTaskDetail(task.id)}
+                onTaskMenu={(task) => setTaskToDelete(task)}
+              />,
+            ]}
+          </AnimatedViewSwitch>
+        </TabsContent>
+
+        {/* Notes Tab Content */}
+        <TabsContent value="notes">
+          <ProjectNotes projectId={id} />
+        </TabsContent>
+
+        {/* Resources Tab Content */}
+        <TabsContent value="resources">
+          <div className="mb-4 flex items-center justify-between">
+            <h3 className="text-sm font-medium">Resources</h3>
+            <Button size="sm" className="h-8 text-xs" onClick={() => setNewResourceOpen(true)}>
+              <Plus className="h-4 w-4" />
+              Add Resource
+            </Button>
+          </div>
+          <ProjectResources resources={resources ?? []} />
+        </TabsContent>
+      </Tabs>
+
+      {/* Modals & Dialogs */}
       <ConfirmDialog
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
@@ -247,6 +409,15 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
         destructive
         isLoading={deleteProject.isPending}
         onConfirm={handleDelete}
+      />
+
+      <NewTaskModal open={newTaskOpen} onOpenChange={setNewTaskOpen} defaultProjectId={id} />
+
+      <NewResourceModal
+        open={newResourceOpen}
+        onOpenChange={setNewResourceOpen}
+        lockedProjectId={id}
+        autoLinkAreaId={project.areaId}
       />
 
       <ConfirmDialog

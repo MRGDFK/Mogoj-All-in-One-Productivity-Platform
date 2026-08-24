@@ -21,6 +21,7 @@ interface KanbanBoardProps<T extends BoardItem, S extends string> {
   onOpen?: (item: T) => void;
   onDelete?: (item: T) => void;
   emptyLabel: string;
+  renderQuickAdd?: (status: S) => ReactNode;
 }
 
 export function KanbanBoard<T extends BoardItem, S extends string>({
@@ -35,6 +36,7 @@ export function KanbanBoard<T extends BoardItem, S extends string>({
   onOpen,
   onDelete,
   emptyLabel,
+  renderQuickAdd,
 }: KanbanBoardProps<T, S>) {
   const {
     columns,
@@ -49,7 +51,7 @@ export function KanbanBoard<T extends BoardItem, S extends string>({
     onDragCancel,
   } = useBoardState<T, S>({ items, isLoading, statuses, getStatus, withStatus, onMove });
 
-  if (boardLoading || columns.length === 0) return <Loader label="Loading board…" />;
+  if (boardLoading || columns.length === 0) return <Loader label="Loading board\u2026" />;
 
   function renderCard(item: T) {
     return (
@@ -82,6 +84,7 @@ export function KanbanBoard<T extends BoardItem, S extends string>({
             emptyLabel={emptyLabel}
             renderItem={renderCard}
             isOver={activeItem !== null && overColumnStatus === column.status}
+            quickAdd={renderQuickAdd?.(column.status)}
           />
         ))}
       </div>

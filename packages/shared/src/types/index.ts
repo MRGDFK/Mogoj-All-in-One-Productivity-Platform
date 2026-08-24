@@ -37,11 +37,15 @@ import type {
   TaskStatus,
   Priority,
   ResourceType,
+  ResourceStatus,
   InboxType,
   InboxStatus,
   EntityType,
   ActivityAction,
 } from "../constants/enums";
+
+export * from "./tag";
+import type { Tag } from "./tag";
 
 export interface Area {
   id: string;
@@ -72,7 +76,9 @@ export interface Project {
   order: number;
   createdAt: string;
   updatedAt: string;
-  area?: Pick<Area, "id" | "name" | "color">;
+  area?: Pick<Area, "id" | "name" | "color" | "icon">;
+  totalTasks?: number;
+  completedTasks?: number;
 }
 
 export interface Task {
@@ -87,24 +93,50 @@ export interface Task {
   priority: Priority;
   dueDate: string | null;
   startDate: string | null;
-  tags: string[];
+  tags: Tag[];
+  isRecurring: boolean;
   order: number;
   createdAt: string;
   updatedAt: string;
   subtasks?: Task[];
-  project?: Pick<Project, "id" | "name" | "color">;
+  workLogs?: WorkLog[];
+  project?: Pick<Project, "id" | "name" | "color" | "icon">;
+  area?: Pick<Area, "id" | "name" | "color" | "icon">;
+}
+
+export interface WorkLog {
+  id: string;
+  taskId: string;
+  userId: string;
+  body: string;
+  createdAt: string;
 }
 
 export interface Resource {
   id: string;
   userId: string;
-  projectId: string | null;
-  areas: Pick<Area, "id" | "name" | "color">[];
+  projects: Pick<Project, "id" | "name" | "color" | "icon">[];
+  areas: Pick<Area, "id" | "name" | "color" | "icon">[];
+  tasks: Pick<Task, "id" | "title" | "status">[];
   title: string;
   type: ResourceType;
+  status: ResourceStatus;
   content: TipTapDocument | null;
   url: string | null;
-  tags: string[];
+  icon: string | null;
+  tags: Tag[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Note {
+  id: string;
+  userId: string;
+  projectId: string | null;
+  areaId: string | null;
+  resourceId: string | null;
+  title: string;
+  content: TipTapDocument | null;
   createdAt: string;
   updatedAt: string;
 }

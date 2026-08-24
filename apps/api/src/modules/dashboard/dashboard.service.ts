@@ -30,6 +30,11 @@ export async function getHQDashboard(userId: string, query: DashboardQuery) {
         where: { userId },
         orderBy: { createdAt: "desc" },
         take: query.recentResourcesLimit,
+        include: {
+          projects: { select: { id: true, name: true, color: true, icon: true } },
+          areas: { select: { id: true, name: true, color: true, icon: true } },
+          tasks: { select: { id: true, title: true, status: true } },
+        },
       }),
       prisma.activityLog.findMany({
         where: { userId },

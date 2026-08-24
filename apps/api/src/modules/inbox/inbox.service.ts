@@ -153,7 +153,7 @@ export async function processInboxItem(userId: string, id: string, input: Proces
     title: item.title,
     type: "note",
     content: toJsonInput(item.body),
-    projectId: input.projectId,
+    projects: input.projectId ? { connect: [{ id: input.projectId }] } : undefined,
     areas: input.areaId ? { connect: [{ id: input.areaId }] } : undefined,
   };
   const resource = await prisma.resource.create({ data: resourceData });

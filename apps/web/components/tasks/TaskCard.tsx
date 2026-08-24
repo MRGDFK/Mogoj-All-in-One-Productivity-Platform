@@ -1,45 +1,56 @@
 "use client";
 
 import type { Task } from "@mogoj/shared";
+import { MoreHorizontal } from "lucide-react";
+import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { useUIStore } from "@/store/useUIStore";
-import { Badge, PriorityBadge } from "@/components/shared/Badge";
-import { cn, formatDate, isOverdue } from "@/lib/utils";
+import { TaskCardContent } from "@/components/tasks/TaskCardContent";
 
-export function TaskCard({ task }: { task: Task }) {
+interface TaskCardProps {
+  task: Task;
+  onClick?: () => void;
+  onMenuClick?: () => void;
+}
+
+export function TaskCard({ task, onClick, onMenuClick }: TaskCardProps) {
   const openTaskDetail = useUIStore((s) => s.openTaskDetail);
-  const overdue = isOverdue(task.dueDate);
+  const handleOpen = () => (onClick ? onClick() : openTaskDetail(task.id));
 
   return (
-    <button
-      type="button"
-      onClick={() => openTaskDetail(task.id)}
-      className="flex flex-col gap-2 rounded-lg border border-border bg-card p-4 text-left transition-colors hover:bg-accent"
-    >
-      <div className="flex items-center justify-between gap-2">
-        <p className={cn("truncate font-medium", task.status === "done" && "text-muted-foreground line-through")}>
-          {task.title}
-        </p>
-        <PriorityBadge priority={task.priority} />
+    <div className="group relative rounded-lg border border-border/60 bg-white p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-150 hover:border-border hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)]">
+      <div className="absolute right-2 top-2">
+        <DropdownMenu.Root>
+          <DropdownMenu.Trigger className="rounded p-0.5 text-gray-400 opacity-0 transition-opacity hover:text-gray-600 group-hover:opacity-100">
+            <MoreHorizontal className="h-4 w-4" />
+          </DropdownMenu.Trigger>
+          <DropdownMenu.Portal>
+            <DropdownMenu.Content align="end" sideOffset={4} className="z-50 min-w-32 rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-md">
+              <DropdownMenu.Item
+                className="flex cursor-pointer items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent"
+                onSelect={handleOpen}
+              >
+                Open
+              </DropdownMenu.Item>
+              {onMenuClick && (
+                <DropdownMenu.Item
+                  className="flex cursor-pointer items-center rounded-sm px-2 py-1.5 text-sm text-destructive outline-none hover:bg-accent"
+                  onSelect={onMenuClick}
+                >
+                  Delete
+                </DropdownMenu.Item>
+              )}
+            </DropdownMenu.Content>
+          </DropdownMenu.Portal>
+        </DropdownMenu.Root>
       </div>
-      {task.project?.name && <p className="truncate text-sm text-muted-foreground">{task.project.name}</p>}
-      <div className="flex items-center justify-between pt-1">
-        {task.dueDate ? (
-          <span className={cn("text-xs text-muted-foreground", overdue && "font-medium text-destructive")}>
-            {formatDate(task.dueDate, "MMM d")}
-          </span>
-        ) : (
-          <span />
-        )}
-        {task.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1">
-            {task.tags.slice(0, 3).map((tag) => (
-              <Badge key={tag} variant="outline" className="text-[10px]">
-                {tag}
-              </Badge>
-            ))}
-          </div>
-        )}
-      </div>
-    </button>
+
+      <button
+        type="button"
+        onClick={handleOpen}
+        className="w-full text-left"
+      >
+        <TaskCardContent task={task} />
+      </button>
+    </div>
   );
 }

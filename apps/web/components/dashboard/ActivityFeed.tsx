@@ -19,9 +19,9 @@ export function ActivityFeed({ activity }: { activity: ActivityLogEntry[] }) {
   }
 
   return (
-    <ul className="space-y-3">
+    <ul className="space-y-2">
       {activity.map((entry) => (
-        <li key={entry.id} className="flex items-start gap-3 text-sm">
+        <li key={entry.id} className="flex items-start gap-2 text-sm">
           <div className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
           <div className="min-w-0">
             <p className="text-foreground">

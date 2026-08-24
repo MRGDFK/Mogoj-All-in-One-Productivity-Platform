@@ -3,6 +3,7 @@ import {
   createTaskSchema,
   updateTaskSchema,
   createSubtaskSchema,
+  createWorkLogSchema,
   taskQuerySchema,
   idParamSchema,
 } from "@mogoj/shared";
@@ -45,4 +46,10 @@ taskRouter.post(
   csrfMiddleware,
   validate({ params: idParamSchema, body: createSubtaskSchema }),
   taskController.createSubtask,
+);
+taskRouter.post(
+  "/:id/worklogs",
+  csrfMiddleware,
+  validate({ params: idParamSchema, body: createWorkLogSchema }),
+  taskController.createWorkLog,
 );

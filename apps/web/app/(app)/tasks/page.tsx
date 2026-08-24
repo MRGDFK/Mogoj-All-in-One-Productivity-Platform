@@ -1,10 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Calendar, CircleDot, Columns3, Flag, FolderKanban, Layers, LayoutGrid, List, Plus } from "lucide-react";
 import type { Priority, Task, TaskQuery, TaskStatus } from "@mogoj/shared";
-import { useTasks, useMoveTask, useDeleteTask } from "@/hooks/useTasks";
+import { useTasks, useCreateTask, useMoveTask, useDeleteTask } from "@/hooks/useTasks";
 import { useAreas } from "@/hooks/useAreas";
 import { useProjects } from "@/hooks/useProjects";
 import { useUIStore } from "@/store/useUIStore";
@@ -15,10 +15,13 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { Button } from "@/components/shared/Button";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { ViewToggle } from "@/components/shared/ViewToggle";
+import { AnimatedViewSwitch } from "@/components/shared/AnimatedViewSwitch";
 import { FilterPopover, type FilterFieldConfig, type FilterState } from "@/components/shared/FilterPopover";
 import { SortPopover, type SortValue } from "@/components/shared/SortPopover";
 import { TaskList } from "@/components/tasks/TaskList";
 import { TaskGrid } from "@/components/tasks/TaskGrid";
+import { TaskMetricStrip } from "@/components/tasks/TaskMetricStrip";
+import { QuickAddInput } from "@/components/tasks/QuickAddInput";
 import { NewTaskModal } from "@/components/tasks/NewTaskModal";
 import { KanbanBoard } from "@/components/projects/KanbanBoard";
 import { TaskKanbanCardContent } from "@/components/projects/TaskKanbanCardContent";
@@ -72,8 +75,46 @@ export default function TasksPage() {
   } as TaskQuery;
 
   const { data: tasks, isLoading } = useTasks(query);
+  const createTask = useCreateTask();
   const moveTask = useMoveTask();
   const deleteTask = useDeleteTask();
+
+  const defaultAreaId = useMemo(() => {
+    if (areas && areas.length > 0) return areas[0]?.id;
+    return undefined;
+  }, [areas]);
+
+  const defaultProjectId = useMemo(() => {
+    if (projects && projects.length > 0) return projects[0]?.id;
+    return undefined;
+  }, [projects]);
+
+  const canQuickAdd = Boolean(defaultAreaId || defaultProjectId);
+
+  const handleQuickAdd = useCallback(
+    (title: string, status: TaskStatus) => {
+      const input = {
+        title,
+        status,
+        priority: "medium" as const,
+        tags: [],
+        isRecurring: false,
+        ...(defaultProjectId
+          ? { projectId: defaultProjectId }
+          : { areaId: defaultAreaId }),
+      };
+
+      createTask.mutate(input, {
+        onSuccess: () => {
+          toast.success("Task created");
+        },
+        onError: (err) => {
+          toast.error(getApiErrorMessage(err) || "Failed to create task");
+        },
+      });
+    },
+    [createTask, defaultAreaId, defaultProjectId],
+  );
 
   const filterFields: FilterFieldConfig[] = useMemo(
     () => [
@@ -147,6 +188,8 @@ export default function TasksPage() {
         }
       />
 
+      <TaskMetricStrip tasks={visibleTasks} isLoading={isLoading} />
+
       <div className="mb-4 flex items-center justify-between gap-2">
         <ViewToggle value={view} onChange={setView} options={VIEW_OPTIONS} />
         <div className="flex gap-2">
@@ -155,23 +198,45 @@ export default function TasksPage() {
         </div>
       </div>
 
-      {view === "kanban" && (
-        <KanbanBoard
-          items={visibleTasks}
-          isLoading={isLoading}
-          statuses={TASK_KANBAN_COLUMNS}
-          visuals={TASK_COLUMN_VISUALS}
-          getStatus={(task) => task.status}
-          withStatus={(task, status, order) => ({ ...task, status, order })}
-          onMove={handleMove}
-          renderContent={(task) => <TaskKanbanCardContent task={task} />}
-          onOpen={(task) => openTaskDetail(task.id)}
-          onDelete={(task) => setTaskToDelete(task)}
-          emptyLabel="No tasks"
-        />
-      )}
-      {view === "list" && <TaskList tasks={visibleTasks} isLoading={isLoading} />}
-      {view === "card" && <TaskGrid tasks={visibleTasks} isLoading={isLoading} />}
+      <AnimatedViewSwitch index={VIEW_OPTIONS.findIndex((o) => o.value === view)}>
+        {[
+          <KanbanBoard
+            key="kanban"
+            items={visibleTasks}
+            isLoading={isLoading}
+            statuses={TASK_KANBAN_COLUMNS}
+            visuals={TASK_COLUMN_VISUALS}
+            getStatus={(task) => task.status}
+            withStatus={(task, status, order) => ({ ...task, status, order })}
+            onMove={handleMove}
+            renderContent={(task) => <TaskKanbanCardContent task={task} onTitleClick={() => openTaskDetail(task.id)} />}
+            onOpen={(task) => openTaskDetail(task.id)}
+            onDelete={(task) => setTaskToDelete(task)}
+            emptyLabel="No tasks"
+            renderQuickAdd={
+              canQuickAdd
+                ? (status) => (
+                    <QuickAddInput status={status} onAdd={handleQuickAdd} disabled={createTask.isPending} />
+                  )
+                : undefined
+            }
+          />,
+          <TaskList
+            key="list"
+            tasks={visibleTasks}
+            isLoading={isLoading}
+            onTaskClick={(task) => openTaskDetail(task.id)}
+            onTaskMenu={(task) => setTaskToDelete(task)}
+          />,
+          <TaskGrid
+            key="card"
+            tasks={visibleTasks}
+            isLoading={isLoading}
+            onTaskClick={(task) => openTaskDetail(task.id)}
+            onTaskMenu={(task) => setTaskToDelete(task)}
+          />,
+        ]}
+      </AnimatedViewSwitch>
 
       <NewTaskModal open={newTaskOpen} onOpenChange={setNewTaskOpen} />
 

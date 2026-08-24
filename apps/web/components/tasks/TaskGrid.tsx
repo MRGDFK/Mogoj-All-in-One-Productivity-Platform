@@ -6,7 +6,14 @@ import { Loader } from "@/components/shared/Loader";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { TaskCard } from "@/components/tasks/TaskCard";
 
-export function TaskGrid({ tasks, isLoading }: { tasks: Task[] | undefined; isLoading: boolean }) {
+interface TaskGridProps {
+  tasks: Task[] | undefined;
+  isLoading: boolean;
+  onTaskClick?: (task: Task) => void;
+  onTaskMenu?: (task: Task) => void;
+}
+
+export function TaskGrid({ tasks, isLoading, onTaskClick, onTaskMenu }: TaskGridProps) {
   if (isLoading) return <Loader label="Loading tasks…" />;
 
   if (!tasks || tasks.length === 0) {
@@ -14,9 +21,14 @@ export function TaskGrid({ tasks, isLoading }: { tasks: Task[] | undefined; isLo
   }
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {tasks.map((task) => (
-        <TaskCard key={task.id} task={task} />
+        <TaskCard
+          key={task.id}
+          task={task}
+          onClick={onTaskClick ? () => onTaskClick(task) : undefined}
+          onMenuClick={onTaskMenu ? () => onTaskMenu(task) : undefined}
+        />
       ))}
     </div>
   );

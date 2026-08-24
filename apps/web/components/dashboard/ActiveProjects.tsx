@@ -16,12 +16,12 @@ export function ActiveProjects({ projects }: { projects: Project[] }) {
   }
 
   return (
-    <ul className="space-y-2">
+    <ul className="space-y-1.5">
       {projects.map((project) => (
         <li key={project.id}>
           <Link
             href={`/projects/${project.id}`}
-            className="flex items-center justify-between gap-3 rounded-md border border-border p-3 transition-colors hover:bg-accent"
+            className="flex items-center justify-between gap-2 rounded-md border border-border px-2.5 py-1.5 transition-colors hover:bg-accent"
           >
             <div className="min-w-0">
               <p className="truncate text-sm font-medium">{project.name}</p>

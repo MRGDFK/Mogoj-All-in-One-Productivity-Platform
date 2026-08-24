@@ -4,9 +4,9 @@ import { ProjectStatus, Priority } from "../constants/enums";
 export const createProjectSchema = z.object({
   areaId: z.string().cuid(),
   name: z.string().min(1).max(150),
-  description: z.string().max(4000).optional(),
-  color: z.string().regex(/^#[0-9a-fA-F]{6}$/).default("#6366f1"),
-  icon: z.string().max(50).default("rocket"),
+  description: z.string().max(2000).optional(),
+  color: z.string().regex(/^#[0-9a-fA-F]{6}$/).default("#000000"),
+  icon: z.string().max(1000).default("Rocket"),
   priority: z
     .enum([Priority.LOW, Priority.MEDIUM, Priority.HIGH, Priority.CRITICAL])
     .default(Priority.MEDIUM),
@@ -18,6 +18,9 @@ export const createProjectSchema = z.object({
 export type CreateProjectInput = z.infer<typeof createProjectSchema>;
 
 export const updateProjectSchema = createProjectSchema.partial().extend({
+  description: z.string().max(2000).optional().nullable(),
+  startDate: z.coerce.date().optional().nullable(),
+  endDate: z.coerce.date().optional().nullable(),
   status: z
     .enum([
       ProjectStatus.ACTIVE,

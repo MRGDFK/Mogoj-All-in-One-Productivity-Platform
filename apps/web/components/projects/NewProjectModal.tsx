@@ -11,6 +11,9 @@ import { Modal } from "@/components/shared/Modal";
 import { Input } from "@/components/shared/Input";
 import { Label } from "@/components/shared/Label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/shared/Select";
+import { IconPicker } from "@/components/shared/IconPicker";
+import { EntityIcon } from "@/components/shared/EntityIcon";
+import { ICON_COLORS } from "@/lib/iconRegistry";
 
 interface NewProjectModalProps {
   open: boolean;
@@ -25,6 +28,8 @@ export function NewProjectModal({ open, onOpenChange, lockedAreaId }: NewProject
 
   const [name, setName] = useState("");
   const [areaId, setAreaId] = useState("");
+  const [icon, setIcon] = useState("rocket");
+  const [color, setColor] = useState<string>(ICON_COLORS[0]!);
   const [error, setError] = useState<string | null>(null);
 
   async function handleCreate(e: React.FormEvent) {
@@ -34,6 +39,8 @@ export function NewProjectModal({ open, onOpenChange, lockedAreaId }: NewProject
     const parsed = createProjectSchema.safeParse({
       name,
       areaId: lockedAreaId ?? areaId,
+      icon,
+      color,
     } satisfies Partial<CreateProjectInput>);
     if (!parsed.success) {
       setError(parsed.error.issues[0]?.message ?? "Invalid input");
@@ -44,6 +51,8 @@ export function NewProjectModal({ open, onOpenChange, lockedAreaId }: NewProject
       await createProject.mutateAsync(parsed.data);
       setName("");
       setAreaId("");
+      setIcon("rocket");
+      setColor(ICON_COLORS[0]!);
       onOpenChange(false);
     } catch (err) {
       setError(getApiErrorMessage(err));
@@ -55,7 +64,19 @@ export function NewProjectModal({ open, onOpenChange, lockedAreaId }: NewProject
       <form onSubmit={handleCreate} className="space-y-4">
         <div className="space-y-1.5">
           <Label htmlFor="project-name">Name</Label>
-          <Input id="project-name" value={name} onChange={(e) => setName(e.target.value)} required />
+          <div className="flex items-center gap-2">
+            <IconPicker icon={icon} color={color} onChange={(next) => {
+              if (next.icon !== undefined) setIcon(next.icon);
+              if (next.color !== undefined) setColor(next.color);
+            }} />
+            <Input
+              id="project-name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              className="flex-1"
+            />
+          </div>
         </div>
         {!lockedAreaId && (
           <div className="space-y-1.5">
@@ -67,7 +88,10 @@ export function NewProjectModal({ open, onOpenChange, lockedAreaId }: NewProject
               <SelectContent>
                 {areas?.map((area) => (
                   <SelectItem key={area.id} value={area.id}>
-                    {area.name}
+                    <span className="flex items-center gap-1.5">
+                      <EntityIcon icon={area.icon} color={area.color} size={14} />
+                      {area.name}
+                    </span>
                   </SelectItem>
                 ))}
               </SelectContent>

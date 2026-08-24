@@ -4,6 +4,7 @@ import type {
   UpdateTaskInput,
   TaskQuery,
   CreateSubtaskInput,
+  CreateWorkLogInput,
 } from "@mogoj/shared";
 import * as taskService from "./task.service.js";
 import { sendSuccess } from "../../utils/ApiResponse.js";
@@ -50,4 +51,13 @@ export const createSubtask = asyncHandler(async (req: Request, res: Response) =>
     req.body as CreateSubtaskInput,
   );
   sendSuccess(res, 201, "Subtask created", subtask);
+});
+
+export const createWorkLog = asyncHandler(async (req: Request, res: Response) => {
+  const workLog = await taskService.createWorkLog(
+    req.user!.id,
+    req.params.id as string,
+    req.body as CreateWorkLogInput,
+  );
+  sendSuccess(res, 201, "Work log created", workLog);
 });

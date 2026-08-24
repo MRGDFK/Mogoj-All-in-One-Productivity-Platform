@@ -44,7 +44,7 @@ export default function SettingsPage() {
     <div className="max-w-lg">
       <PageHeader title="Settings" description="Your profile and preferences." />
 
-      <div className="mb-6 flex items-center gap-3">
+      <div className="mb-4 flex items-center gap-3">
         <Avatar name={user.name} src={user.avatar} className="h-14 w-14 text-lg" />
         <div>
           <p className="font-medium">{user.name}</p>
@@ -52,7 +52,7 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      <form onSubmit={handleSave} className="space-y-4">
+      <form onSubmit={handleSave} className="space-y-3">
         <div className="space-y-1.5">
           <Label htmlFor="settings-name">Name</Label>
           <Input id="settings-name" value={name} onChange={(e) => setName(e.target.value)} required />
@@ -71,7 +71,7 @@ export default function SettingsPage() {
         </Button>
       </form>
 
-      <div className="mt-8 border-t border-border pt-6">
+      <div className="mt-6 border-t border-border pt-4">
         <Button
           variant="outline"
           onClick={() => logout.mutate(undefined, { onSuccess: () => router.push("/login") })}

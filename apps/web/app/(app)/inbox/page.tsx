@@ -21,7 +21,7 @@ export default function InboxPage() {
 
       <InboxCapture />
 
-      <div className="mb-4 mt-6 flex gap-1 border-b border-border">
+      <div className="mb-3 mt-3 flex gap-1 border-b border-border">
         {TABS.map((t) => (
           <button
             key={t.value}

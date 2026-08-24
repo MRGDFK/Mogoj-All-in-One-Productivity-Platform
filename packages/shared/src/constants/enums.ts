@@ -40,6 +40,12 @@ export const ResourceType = {
 } as const;
 export type ResourceType = (typeof ResourceType)[keyof typeof ResourceType];
 
+export const ResourceStatus = {
+  OPEN: "open",
+  CLOSED: "closed",
+} as const;
+export type ResourceStatus = (typeof ResourceStatus)[keyof typeof ResourceStatus];
+
 export const InboxType = {
   TASK: "task",
   PROJECT: "project",
@@ -59,6 +65,7 @@ export const EntityType = {
   PROJECT: "project",
   AREA: "area",
   RESOURCE: "resource",
+  NOTE: "note",
   INBOX: "inbox",
 } as const;
 export type EntityType = (typeof EntityType)[keyof typeof EntityType];

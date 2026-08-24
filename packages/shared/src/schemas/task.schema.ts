@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { TaskStatus, Priority } from "../constants/enums";
+import { tagSchema } from "./resource.schema";
 
 const tiptapDocSchema = z.object({
   type: z.literal("doc"),
@@ -19,9 +20,16 @@ export const createTaskSchema = z
     priority: z
       .enum([Priority.LOW, Priority.MEDIUM, Priority.HIGH, Priority.CRITICAL])
       .default(Priority.MEDIUM),
-    dueDate: z.coerce.date().optional(),
-    startDate: z.coerce.date().optional(),
-    tags: z.array(z.string().min(1).max(50)).max(20).default([]),
+    dueDate: z.preprocess(
+      (val) => (val === "" || val === null ? undefined : val),
+      z.coerce.date().optional()
+    ),
+    startDate: z.preprocess(
+      (val) => (val === "" || val === null ? undefined : val),
+      z.coerce.date().optional()
+    ),
+    tags: z.array(tagSchema).max(20).default([]),
+    isRecurring: z.boolean().default(false),
     order: z.number().optional(),
   })
   .refine((data) => data.projectId ?? data.areaId, {
@@ -41,9 +49,16 @@ export const updateTaskSchema = z.object({
   priority: z
     .enum([Priority.LOW, Priority.MEDIUM, Priority.HIGH, Priority.CRITICAL])
     .optional(),
-  dueDate: z.coerce.date().optional().nullable(),
-  startDate: z.coerce.date().optional().nullable(),
-  tags: z.array(z.string().min(1).max(50)).max(20).optional(),
+  dueDate: z.preprocess(
+    (val) => (val === "" || val === null ? undefined : val),
+    z.coerce.date().optional().nullable()
+  ),
+  startDate: z.preprocess(
+    (val) => (val === "" || val === null ? undefined : val),
+    z.coerce.date().optional().nullable()
+  ),
+  tags: z.array(tagSchema).max(20).optional(),
+  isRecurring: z.boolean().optional(),
   order: z.number().optional(),
 });
 export type UpdateTaskInput = z.infer<typeof updateTaskSchema>;

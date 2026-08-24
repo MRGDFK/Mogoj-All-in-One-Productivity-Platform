@@ -23,6 +23,11 @@ export async function globalSearch(userId: string, q: string) {
       where: { userId, title: { contains: q, mode: "insensitive" } },
       take: RESULT_LIMIT,
       orderBy: { updatedAt: "desc" },
+      include: {
+        projects: { select: { id: true, name: true, color: true, icon: true } },
+        areas: { select: { id: true, name: true, color: true, icon: true } },
+        tasks: { select: { id: true, title: true, status: true } },
+      },
     }),
   ]);
 

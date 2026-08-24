@@ -12,11 +12,15 @@ import { Input } from "@/components/shared/Input";
 import { Label } from "@/components/shared/Label";
 import { Textarea } from "@/components/shared/Textarea";
 import { AreaGrid } from "@/components/areas/AreaGrid";
+import { IconPicker } from "@/components/shared/IconPicker";
+import { ICON_COLORS } from "@/lib/iconRegistry";
 
 export default function AreasPage() {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [icon, setIcon] = useState("folder");
+  const [color, setColor] = useState<string>(ICON_COLORS[0]!);
   const [error, setError] = useState<string | null>(null);
   const createArea = useCreateArea();
 
@@ -27,6 +31,8 @@ export default function AreasPage() {
     const parsed = createAreaSchema.safeParse({
       name,
       description: description || undefined,
+      icon,
+      color,
     });
     if (!parsed.success) {
       setError(parsed.error.issues[0]?.message ?? "Invalid input");
@@ -37,6 +43,8 @@ export default function AreasPage() {
       await createArea.mutateAsync(parsed.data);
       setName("");
       setDescription("");
+      setIcon("folder");
+      setColor(ICON_COLORS[0]!);
       setOpen(false);
     } catch (err) {
       setError(getApiErrorMessage(err));
@@ -62,7 +70,23 @@ export default function AreasPage() {
         <form onSubmit={handleCreate} className="space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="area-name">Name</Label>
-            <Input id="area-name" value={name} onChange={(e) => setName(e.target.value)} required />
+            <div className="flex items-center gap-2">
+              <IconPicker
+                icon={icon}
+                color={color}
+                onChange={(next) => {
+                  if (next.icon !== undefined) setIcon(next.icon);
+                  if (next.color !== undefined) setColor(next.color);
+                }}
+              />
+              <Input
+                id="area-name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                className="flex-1"
+              />
+            </div>
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="area-description">Description (optional)</Label>

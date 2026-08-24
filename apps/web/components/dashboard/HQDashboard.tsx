@@ -18,24 +18,24 @@ export function HQDashboard() {
       {isLoading || !data ? (
         <Loader label="Loading your dashboard…" />
       ) : (
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <section className="rounded-lg border border-border bg-card p-4">
-            <h2 className="mb-3 text-sm font-semibold">Today</h2>
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+          <section className="rounded-lg border border-border bg-card p-3">
+            <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Today</h2>
             <TodayTasks tasks={data.todayTasks} />
           </section>
 
-          <section className="rounded-lg border border-border bg-card p-4">
-            <h2 className="mb-3 text-sm font-semibold">Active Projects</h2>
+          <section className="rounded-lg border border-border bg-card p-3">
+            <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Active Projects</h2>
             <ActiveProjects projects={data.activeProjects} />
           </section>
 
-          <section className="rounded-lg border border-border bg-card p-4">
-            <h2 className="mb-3 text-sm font-semibold">Recent Resources</h2>
+          <section className="rounded-lg border border-border bg-card p-3">
+            <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Recent Resources</h2>
             <RecentResources resources={data.recentResources} />
           </section>
 
-          <section className="rounded-lg border border-border bg-card p-4">
-            <h2 className="mb-3 text-sm font-semibold">Recent Activity</h2>
+          <section className="rounded-lg border border-border bg-card p-3">
+            <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Recent Activity</h2>
             <ActivityFeed activity={data.recentActivity} />
           </section>
         </div>

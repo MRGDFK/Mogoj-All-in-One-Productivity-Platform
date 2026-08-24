@@ -37,7 +37,7 @@ export function Header() {
     (results.tasks.length || results.projects.length || results.areas.length || results.resources.length);
 
   return (
-    <header className="flex h-14 items-center justify-between gap-4 border-b border-border bg-card px-6">
+    <header className="flex h-10 items-center justify-between gap-4 border-b border-border bg-card px-4">
       <div ref={containerRef} className="relative w-full max-w-sm">
         <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input

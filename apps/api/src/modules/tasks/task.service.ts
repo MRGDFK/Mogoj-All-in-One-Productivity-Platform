@@ -1,5 +1,11 @@
 import type { Prisma } from "@prisma/client";
-import type { CreateTaskInput, UpdateTaskInput, TaskQuery, CreateSubtaskInput } from "@mogoj/shared";
+import type {
+  CreateTaskInput,
+  UpdateTaskInput,
+  TaskQuery,
+  CreateSubtaskInput,
+  CreateWorkLogInput,
+} from "@mogoj/shared";
 import { prisma } from "../../config/db.js";
 import { ApiError } from "../../utils/ApiError.js";
 import { writeActivityLog } from "../activity/activity.service.js";
@@ -11,25 +17,36 @@ async function assertAreaOwnership(userId: string, areaId: string) {
 }
 
 export async function listTasks(userId: string, query: TaskQuery) {
+  const where: Prisma.TaskWhereInput = {
+    userId,
+    ...(query.topLevelOnly && { parentTaskId: null }),
+    ...(query.projectId && { projectId: query.projectId }),
+    ...(query.areaId && { areaId: query.areaId }),
+    ...(query.status && { status: query.status }),
+    ...(query.priority && { priority: query.priority }),
+    ...(query.q && { title: { contains: query.q, mode: "insensitive" } }),
+    ...((query.dueBefore || query.dueAfter) && {
+      dueDate: {
+        ...(query.dueBefore && { lte: query.dueBefore }),
+        ...(query.dueAfter && { gte: query.dueAfter }),
+      },
+    }),
+  };
+
+  if (query.tag) {
+    where.AND = [
+      { tags: { path: ["$", "*", "name"], string_contains: query.tag } },
+    ];
+  }
+
   return prisma.task.findMany({
-    where: {
-      userId,
-      ...(query.topLevelOnly && { parentTaskId: null }),
-      ...(query.projectId && { projectId: query.projectId }),
-      ...(query.areaId && { areaId: query.areaId }),
-      ...(query.status && { status: query.status }),
-      ...(query.priority && { priority: query.priority }),
-      ...(query.tag && { tags: { has: query.tag } }),
-      ...(query.q && { title: { contains: query.q, mode: "insensitive" } }),
-      ...((query.dueBefore || query.dueAfter) && {
-        dueDate: {
-          ...(query.dueBefore && { lte: query.dueBefore }),
-          ...(query.dueAfter && { gte: query.dueAfter }),
-        },
-      }),
-    },
+    where,
     orderBy: [{ status: "asc" }, { order: "asc" }],
-    include: { subtasks: { orderBy: { order: "asc" } } },
+    include: {
+      subtasks: { orderBy: { order: "asc" } },
+      project: { select: { id: true, name: true, color: true, icon: true } },
+      area: { select: { id: true, name: true, color: true, icon: true } },
+    },
   });
 }
 
@@ -78,7 +95,8 @@ export async function createTask(userId: string, input: CreateTaskInput) {
     priority: input.priority,
     dueDate: input.dueDate,
     startDate: input.startDate,
-    tags: input.tags,
+    tags: toJsonInput(input.tags),
+    isRecurring: input.isRecurring,
     order,
   };
 
@@ -90,7 +108,12 @@ export async function createTask(userId: string, input: CreateTaskInput) {
 export async function getTaskById(userId: string, id: string) {
   const task = await prisma.task.findFirst({
     where: { id, userId },
-    include: { subtasks: { orderBy: { order: "asc" } } },
+    include: {
+      subtasks: { orderBy: { order: "asc" } },
+      workLogs: { orderBy: { createdAt: "desc" } },
+      project: { select: { id: true, name: true, color: true, icon: true } },
+      area: { select: { id: true, name: true, color: true, icon: true } },
+    },
   });
   if (!task) throw ApiError.notFound("Task not found");
   return task;
@@ -116,7 +139,8 @@ export async function updateTask(userId: string, id: string, input: UpdateTaskIn
     ...(input.priority !== undefined && { priority: input.priority }),
     ...(input.dueDate !== undefined && { dueDate: input.dueDate }),
     ...(input.startDate !== undefined && { startDate: input.startDate }),
-    ...(input.tags !== undefined && { tags: input.tags }),
+    ...(input.tags !== undefined && { tags: toJsonInput(input.tags) }),
+    ...(input.isRecurring !== undefined && { isRecurring: input.isRecurring }),
     ...(input.order !== undefined && { order: input.order }),
     ...(input.projectId !== undefined && { projectId: input.projectId }),
     ...(needsAreaResolution && { areaId }),
@@ -163,7 +187,7 @@ export async function createSubtask(userId: string, parentTaskId: string, input:
     priority: input.priority,
     dueDate: input.dueDate,
     startDate: input.startDate,
-    tags: input.tags,
+    tags: toJsonInput(input.tags),
     order,
   };
 
@@ -171,4 +195,9 @@ export async function createSubtask(userId: string, parentTaskId: string, input:
 
   await writeActivityLog({ userId, entityType: "task", entityId: subtask.id, action: "created" });
   return subtask;
+}
+
+export async function createWorkLog(userId: string, taskId: string, input: CreateWorkLogInput) {
+  await getTaskById(userId, taskId);
+  return prisma.workLog.create({ data: { userId, taskId, body: input.body } });
 }

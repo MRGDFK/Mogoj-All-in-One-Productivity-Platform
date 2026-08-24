@@ -44,6 +44,11 @@ enum ResourceType {
   image
 }
 
+enum ResourceStatus {
+  open
+  closed
+}
+
 enum InboxType {
   task
   project
@@ -61,6 +66,7 @@ enum EntityType {
   project
   area
   resource
+  note
   inbox
 }
 
@@ -92,9 +98,12 @@ model User {
   projects      Project[]
   tasks         Task[]
   resources     Resource[]
+  tags          Tag[]
+  notes         Note[]
   inboxItems    InboxItem[]
   activityLogs  ActivityLog[]
   refreshTokens RefreshToken[]
+  workLogs      WorkLog[]
 
   @@map("users")
 }
@@ -120,8 +129,8 @@ model Area {
   user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   name        String
   description String?
-  color       String     @default("#6366f1")
-  icon        String     @default("folder")
+  color       String     @default("#000000")
+  icon        String     @default("Folder")
   status      AreaStatus @default(active)
   order       Float      @default(0)
   createdAt   DateTime   @default(now())
@@ -130,6 +139,7 @@ model Area {
   projects  Project[]
   tasks     Task[]
   resources Resource[] @relation("ResourceAreas")
+  notes     Note[]
 
   @@index([userId, status])
   @@map("areas")
@@ -143,8 +153,8 @@ model Project {
   area        Area          @relation(fields: [areaId], references: [id], onDelete: Restrict)
   name        String
   description String?
-  color       String        @default("#6366f1")
-  icon        String        @default("rocket")
+  color       String        @default("#000000")
+  icon        String        @default("Rocket")
   status      ProjectStatus @default(active)
   priority    Priority      @default(medium)
   startDate   DateTime?
@@ -155,7 +165,8 @@ model Project {
   updatedAt   DateTime      @updatedAt
 
   tasks     Task[]
-  resources Resource[]
+  resources Resource[] @relation("ResourceProjects")
+  notes     Note[]
 
   promotedFromInboxItem InboxItem? @relation("PromotedProject")
 
@@ -188,10 +199,14 @@ model Task {
   priority    Priority   @default(medium)
   dueDate     DateTime?
   startDate   DateTime?
-  tags        String[]   @default([])
+  tags        Json       @default("[]")
+  isRecurring Boolean    @default(false)
   order       Float      @default(0)
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
+
+  workLogs  WorkLog[]
+  resources Resource[] @relation("ResourceTasks")
 
   promotedFromInboxItem InboxItem? @relation("PromotedTask")
 
@@ -203,30 +218,89 @@ model Task {
   @@map("tasks")
 }
 
+// Freeform progress updates/notes a user attaches to a task over time.
+model WorkLog {
+  id     String @id @default(cuid())
+  taskId String
+  task   Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  body      String
+  createdAt DateTime @default(now())
+
+  @@index([taskId])
+  @@map("work_logs")
+}
+
 model Resource {
   id     String @id @default(cuid())
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  projectId String?
-  project   Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  // A resource can be tagged to multiple areas at once, independent of its
-  // project (unlike Task, where areaId mirrors the project's single area).
-  areas     Area[]   @relation("ResourceAreas")
+  // A resource can be tagged to multiple projects, areas, and tasks, independent relations.
+  projects Project[] @relation("ResourceProjects")
+  areas    Area[]    @relation("ResourceAreas")
+  tasks    Task[]    @relation("ResourceTasks")
 
   title     String
   type      ResourceType
+  status    ResourceStatus @default(open)
   content   Json?
   url       String?
-  tags      String[]     @default([])
+  icon      String?
+  tags      Tag[]      @relation("ResourceTags")
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
 
+  notes                 Note[]
   promotedFromInboxItem InboxItem? @relation("PromotedResource")
 
   @@index([userId])
-  @@index([projectId])
   @@map("resources")
+}
+
+model Tag {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name  String
+  color String
+
+  resources Resource[] @relation("ResourceTags")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, name])
+  @@index([userId])
+  @@map("tags")
+}
+
+model Note {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // A note can belong to a project, area, or resource (all optional).
+  projectId  String?
+  project    Project?  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  areaId     String?
+  area       Area?     @relation(fields: [areaId], references: [id], onDelete: Cascade)
+  resourceId String?
+  resource   Resource? @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+
+  title     String
+  content   Json? // TipTap document
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([projectId])
+  @@index([areaId])
+  @@index([resourceId])
+  @@map("notes")
 }
 
 model InboxItem {

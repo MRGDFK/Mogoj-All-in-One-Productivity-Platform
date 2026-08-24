@@ -33,18 +33,16 @@ function KanbanCardImpl({ id, onOpen, onDelete, children }: KanbanCardProps) {
       style={style}
       {...attributes}
       {...listeners}
-      onClick={onOpen}
       className={cn(
-        "group relative flex cursor-grab touch-none gap-2 rounded-xl bg-card p-4 text-sm shadow-sm transition-opacity active:cursor-grabbing",
+        "group relative flex cursor-grab touch-none rounded-lg border border-border/60 bg-white shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-150 hover:border-border hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] active:cursor-grabbing",
         isDragging && "opacity-0",
       )}
     >
       <GripVertical
-        className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100"
+        className="mt-2.5 ml-1 h-3.5 w-3.5 shrink-0 text-gray-300 opacity-0 transition-opacity group-hover:opacity-100"
         aria-hidden="true"
       />
-
-      <div className="min-w-0 flex-1">{children}</div>
+      <div className="min-w-0 flex-1 p-3 pl-1">{children}</div>
 
       {(onOpen ?? onDelete) && (
         <DropdownMenu>
@@ -52,7 +50,7 @@ function KanbanCardImpl({ id, onOpen, onDelete, children }: KanbanCardProps) {
             <button
               type="button"
               onClick={(e) => e.stopPropagation()}
-              className="absolute right-2 top-2 shrink-0 rounded-md p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-accent group-hover:opacity-100"
+              className="absolute right-2 top-2 shrink-0 rounded-md p-1 text-gray-400 opacity-0 transition-opacity hover:bg-gray-100 hover:text-gray-600 group-hover:opacity-100"
               aria-label="More actions"
             >
               <MoreVertical className="h-4 w-4" />

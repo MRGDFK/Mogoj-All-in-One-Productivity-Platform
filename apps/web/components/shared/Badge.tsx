@@ -1,6 +1,7 @@
 import { cva, type VariantProps } from "class-variance-authority";
 import * as React from "react";
 import { cn } from "@/lib/utils";
+import { PriorityIcon } from "@/components/shared/PriorityIcon";
 
 const badgeVariants = cva(
   "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium",
@@ -36,6 +37,18 @@ const PRIORITY_VARIANT = {
   critical: "danger",
 } as const;
 
+const PRIORITY_BADGE_CLASSES: Record<string, string> = {
+  low: "border-green-200 text-green-700 bg-green-50/80 shadow-sm shadow-green-100",
+  medium: "border-amber-200 text-amber-700 bg-amber-50/80 shadow-sm shadow-amber-100",
+  high: "border-orange-200 text-orange-700 bg-orange-50/80 shadow-sm shadow-orange-100",
+  critical: "border-red-300 text-red-700 bg-red-50/80 font-extrabold shadow-sm shadow-red-100 animate-pulse",
+};
+
 export function PriorityBadge({ priority }: { priority: keyof typeof PRIORITY_VARIANT }) {
-  return <Badge variant={PRIORITY_VARIANT[priority]}>{priority}</Badge>;
+  return (
+    <Badge variant={PRIORITY_VARIANT[priority]} className={cn("border", PRIORITY_BADGE_CLASSES[priority])}>
+      <PriorityIcon priority={priority} />
+      {priority}
+    </Badge>
+  );
 }

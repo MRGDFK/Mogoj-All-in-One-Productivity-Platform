@@ -18,6 +18,7 @@ import { Textarea } from "@/components/shared/Textarea";
 import { AreaDashboard } from "@/components/areas/AreaDashboard";
 import { NewProjectModal } from "@/components/projects/NewProjectModal";
 import { NewResourceModal } from "@/components/resources/NewResourceModal";
+import { IconPicker } from "@/components/shared/IconPicker";
 import { toast } from "sonner";
 
 export default function AreaDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -49,6 +50,14 @@ export default function AreaDetailPage({ params }: { params: Promise<{ id: strin
       <PageHeader
         title={area.name}
         description={area.description ?? undefined}
+        icon={
+          <IconPicker
+            icon={area.icon}
+            color={area.color}
+            triggerSize={44}
+            onChange={(next) => updateArea.mutate(next)}
+          />
+        }
         actions={
           <>
             <Button variant="outline" onClick={() => setEditOpen(true)}>

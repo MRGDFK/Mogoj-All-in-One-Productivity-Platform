@@ -1,23 +1,34 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Trash2 } from "lucide-react";
+import { useState } from "react";
+import * as Dialog from "@radix-ui/react-dialog";
+import { Calendar, FolderKanban, ListChecks, Trash2, X } from "lucide-react";
+import { SheetContent } from "@/components/shared/Sheet";
+import { EntityIcon } from "@/components/shared/EntityIcon";
+import type { Area, Priority, Project, Task } from "@mogoj/shared";
 import { useTask, useUpdateTask, useDeleteTask } from "@/hooks/useTasks";
 import { useProjects } from "@/hooks/useProjects";
 import { useAreas } from "@/hooks/useAreas";
 import { useUIStore } from "@/store/useUIStore";
 import { docToText, textToDoc } from "@/lib/tiptap";
-import { SlideOver } from "@/components/shared/SlideOver";
-import { Input } from "@/components/shared/Input";
-import { Textarea } from "@/components/shared/Textarea";
-import { Label } from "@/components/shared/Label";
-import { Button } from "@/components/shared/Button";
-import { Badge } from "@/components/shared/Badge";
+import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/shared/Select";
-import { SubtaskList } from "@/components/tasks/SubtaskList";
+import { Textarea } from "@/components/shared/Textarea";
 import { Loader } from "@/components/shared/Loader";
+import { PriorityIcon, PRIORITY_LABELS } from "@/components/shared/PriorityIcon";
+import { StatusIcon, STATUS_LABELS } from "@/components/shared/StatusIcon";
+import { AreaProjectBreadcrumb } from "@/components/shared/AreaProjectBreadcrumb";
+import { SubtaskList } from "@/components/tasks/SubtaskList";
 
+const PRIORITY_OPTIONS: Priority[] = ["low", "medium", "high", "critical"];
 const NO_PROJECT = "__none__";
+const NO_AREA = "__none__";
+const PRIORITY_TRIGGER_CLASSES: Record<Priority, string> = {
+  low: "border-green-200 text-green-700 bg-green-50/80 shadow-sm shadow-green-100",
+  medium: "border-amber-200 text-amber-700 bg-amber-50/80 shadow-sm shadow-amber-100",
+  high: "border-orange-200 text-orange-700 bg-orange-50/80 shadow-sm shadow-orange-100",
+  critical: "border-red-300 text-red-700 bg-red-50/80 font-extrabold shadow-sm shadow-red-100 animate-pulse",
+};
 
 export function TaskDetailPanel() {
   const taskDetailId = useUIStore((s) => s.taskDetailId);
@@ -28,176 +39,261 @@ export function TaskDetailPanel() {
   const { data: projects } = useProjects({});
   const { data: areas } = useAreas({ status: "active" });
 
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [tags, setTags] = useState("");
-  const [dueDate, setDueDate] = useState("");
-
-  useEffect(() => {
-    if (task) {
-      setTitle(task.title);
-      setDescription(docToText(task.description));
-      setTags(task.tags.join(", "));
-      setDueDate(task.dueDate ? task.dueDate.slice(0, 10) : "");
-    }
-  }, [task]);
-
   if (!taskDetailId) return null;
 
-  return (
-    <SlideOver open={Boolean(taskDetailId)} onOpenChange={(open) => !open && closeTaskDetail()} title="Task">
-      {!task ? (
-        <Loader />
-      ) : (
-        <div className="space-y-5">
-          <Input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            onBlur={() => title.trim() && title !== task.title && updateTask.mutate({ title: title.trim() })}
-            className="border-none px-0 text-lg font-semibold shadow-none focus-visible:ring-0"
-          />
+  const project = task ? projects?.find((p) => p.id === task.projectId) : undefined;
+  const area = task
+    ? project
+      ? areas?.find((a) => a.id === project.areaId)
+      : areas?.find((a) => a.id === task.areaId)
+    : undefined;
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label>Status</Label>
-              <Select value={task.status} onValueChange={(v) => updateTask.mutate({ status: v as never })}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todo">To Do</SelectItem>
-                  <SelectItem value="in_progress">In Progress</SelectItem>
-                  <SelectItem value="in_review">In Review</SelectItem>
-                  <SelectItem value="done">Done</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label>Priority</Label>
-              <Select value={task.priority} onValueChange={(v) => updateTask.mutate({ priority: v as never })}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="low">Low</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
-                  <SelectItem value="critical">Critical</SelectItem>
-                </SelectContent>
-              </Select>
+  return (
+    <SheetContent open={Boolean(taskDetailId)} onOpenChange={(open) => !open && closeTaskDetail()}>
+      {!task ? (
+        <Loader className="py-16" />
+      ) : (
+        <TaskDetailForm
+          key={task.id}
+          task={task}
+          area={area}
+          project={project}
+          areas={areas ?? []}
+          projects={projects ?? []}
+          updateTask={updateTask}
+          deleteTask={deleteTask}
+          closeTaskDetail={closeTaskDetail}
+        />
+      )}
+    </SheetContent>
+  );
+}
+
+interface TaskDetailFormProps {
+  task: Task;
+  area: Area | undefined;
+  project: Project | undefined;
+  areas: Area[];
+  projects: Project[];
+  updateTask: ReturnType<typeof useUpdateTask>;
+  deleteTask: ReturnType<typeof useDeleteTask>;
+  closeTaskDetail: () => void;
+}
+
+// Keyed by task.id from the parent, so every task gets a fresh component
+// instance — local field state always starts from that task's real data
+// instead of relying on an effect to re-sync and risking stale leftovers
+// from whichever task was open before.
+function TaskDetailForm({
+  task,
+  area,
+  project,
+  areas,
+  projects,
+  updateTask,
+  deleteTask,
+  closeTaskDetail,
+}: TaskDetailFormProps) {
+  const [title, setTitle] = useState(task.title);
+  const [description, setDescription] = useState(docToText(task.description));
+  const [dueDate, setDueDate] = useState(task.dueDate ? task.dueDate.slice(0, 10) : "");
+
+  return (
+    <>
+      <div className="flex items-start justify-between gap-4 border-b border-slate-100 px-6 pb-4 pt-5">
+        <div className="min-w-0 flex-1">
+          <Dialog.Title asChild>
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              onBlur={() => title.trim() && title !== task.title && updateTask.mutate({ title: title.trim() })}
+              className="w-full truncate border-none bg-transparent p-0 text-xl font-medium text-slate-900 outline-none"
+            />
+          </Dialog.Title>
+          <p className="mt-0.5 text-[11px] font-medium uppercase tracking-wide text-slate-400">
+            Task workspace
+          </p>
+        </div>
+        <div className="flex shrink-0 items-center gap-1">
+          <button
+            type="button"
+            aria-label="Delete task"
+            onClick={() => {
+              deleteTask.mutate(task.id);
+              closeTaskDetail();
+            }}
+            className="rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-red-600"
+          >
+            <Trash2 className="h-[18px] w-[18px]" />
+          </button>
+          <Dialog.Close asChild>
+            <button
+              type="button"
+              aria-label="Close"
+              className="rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+            >
+              <X className="h-[18px] w-[18px]" />
+            </button>
+          </Dialog.Close>
+        </div>
+      </div>
+
+      <AreaProjectBreadcrumb
+        areaName={area?.name}
+        areaIcon={area?.icon}
+        areaColor={area?.color}
+        projectName={project?.name}
+        projectIcon={project?.icon}
+        projectColor={project?.color}
+      />
+
+      <div className="flex-1 overflow-y-auto px-6 pb-6 pt-5">
+        <div className="grid grid-cols-2 gap-4 rounded-[10px] border border-slate-200 bg-slate-50 p-4">
+          <div className="flex flex-col gap-1.5">
+            <span className="text-[11px] font-medium uppercase tracking-wide text-slate-400">Status</span>
+            <Select value={task.status} onValueChange={(v) => updateTask.mutate({ status: v as never })}>
+              <SelectTrigger className="h-8 border-slate-200 bg-white px-2 text-sm font-medium">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todo">
+                  <span className="flex items-center gap-1.5">
+                    <StatusIcon status="todo" size={16} />
+                    {STATUS_LABELS.todo}
+                  </span>
+                </SelectItem>
+                <SelectItem value="in_progress">
+                  <span className="flex items-center gap-1.5">
+                    <StatusIcon status="in_progress" size={16} />
+                    {STATUS_LABELS.in_progress}
+                  </span>
+                </SelectItem>
+                <SelectItem value="in_review">
+                  <span className="flex items-center gap-1.5">
+                    <StatusIcon status="in_review" size={16} />
+                    {STATUS_LABELS.in_review}
+                  </span>
+                </SelectItem>
+                <SelectItem value="done">
+                  <span className="flex items-center gap-1.5">
+                    <StatusIcon status="done" size={16} />
+                    {STATUS_LABELS.done}
+                  </span>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <span className="text-[11px] font-medium uppercase tracking-wide text-slate-400">Priority</span>
+            <Select value={task.priority} onValueChange={(v) => updateTask.mutate({ priority: v as never })}>
+              <SelectTrigger className={cn(
+                "h-8 px-2 text-sm font-medium",
+                PRIORITY_TRIGGER_CLASSES[task.priority],
+              )}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {PRIORITY_OPTIONS.map((p) => (
+                  <SelectItem key={p} value={p}>
+                    <span className="flex items-center gap-1.5">
+                      <PriorityIcon priority={p} />
+                      {PRIORITY_LABELS[p]}
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="col-span-2 flex flex-col gap-1.5">
+            <span className="text-[11px] font-medium uppercase tracking-wide text-slate-400">Due date</span>
+            <div className="flex items-center gap-2">
+              <Calendar className="h-3.5 w-3.5 text-slate-400" />
+              <input
+                type="date"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+                onBlur={() => updateTask.mutate({ dueDate: dueDate ? new Date(`${dueDate}T12:00:00Z`) : null })}
+                className={cn(
+                  "border-none bg-transparent p-0 text-sm font-medium outline-none",
+                  !dueDate && "text-slate-400",
+                )}
+              />
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label>Project</Label>
+          <div className="col-span-2 flex flex-col gap-1.5">
+            <span className="text-[11px] font-medium uppercase tracking-wide text-slate-400">Area</span>
+            <div className="flex items-center gap-2">
               <Select
-                value={task.projectId ?? NO_PROJECT}
-                onValueChange={(v) =>
-                  updateTask.mutate({ projectId: v === NO_PROJECT ? null : v })
-                }
+                value={task.areaId ?? NO_AREA}
+                onValueChange={(v) => updateTask.mutate({ areaId: v === NO_AREA ? null : v })}
               >
-                <SelectTrigger>
+                <SelectTrigger className="h-8 border-slate-200 bg-white px-2 text-sm font-medium">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={NO_PROJECT}>No project</SelectItem>
-                  {projects?.map((project) => (
-                    <SelectItem key={project.id} value={project.id}>
-                      {project.name}
+                  <SelectItem value={NO_AREA}>No area</SelectItem>
+                  {areas.map((a) => (
+                    <SelectItem key={a.id} value={a.id}>
+                      <span className="flex items-center gap-1.5">
+                        <EntityIcon icon={a.icon} color={a.color} size={14} />
+                        {a.name}
+                      </span>
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-1.5">
-              <Label>Area</Label>
-              {task.projectId ? (
-                <div className="flex h-9 items-center">
-                  <Badge variant="outline">
-                    {areas?.find((a) => a.id === task.areaId)?.name ?? "Via project"}
-                  </Badge>
-                </div>
-              ) : (
-                <Select
-                  value={task.areaId ?? undefined}
-                  onValueChange={(v) => updateTask.mutate({ areaId: v })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Choose an area" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {areas?.map((area) => (
-                      <SelectItem key={area.id} value={area.id}>
-                        {area.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
+          </div>
+
+          <div className="col-span-2 flex flex-col gap-1.5">
+            <span className="text-[11px] font-medium uppercase tracking-wide text-slate-400">Project</span>
+            <div className="flex items-center gap-2">
+              <Select
+                value={task.projectId ?? NO_PROJECT}
+                onValueChange={(v) => updateTask.mutate({ projectId: v === NO_PROJECT ? null : v })}
+              >
+                <SelectTrigger className="h-8 border-slate-200 bg-white px-2 text-sm font-medium">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={NO_PROJECT}>No project</SelectItem>
+                  {projects.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      <span className="flex items-center gap-1.5">
+                        <EntityIcon icon={p.icon} color={p.color} size={14} fallback={FolderKanban} />
+                        {p.name}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="task-due">Due date</Label>
-            <Input
-              id="task-due"
-              type="date"
-              value={dueDate}
-              onChange={(e) => setDueDate(e.target.value)}
-              onBlur={() => updateTask.mutate({ dueDate: dueDate ? new Date(dueDate) : null })}
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="task-tags">Tags</Label>
-            <Input
-              id="task-tags"
-              value={tags}
-              onChange={(e) => setTags(e.target.value)}
-              onBlur={() =>
-                updateTask.mutate({
-                  tags: tags
-                    .split(",")
-                    .map((t) => t.trim())
-                    .filter(Boolean),
-                })
-              }
-              placeholder="comma, separated, tags"
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="task-description">Description</Label>
-            <Textarea
-              id="task-description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              onBlur={() => updateTask.mutate({ description: description ? textToDoc(description) : null })}
-              rows={5}
-            />
-          </div>
-
-          {!task.parentTaskId && (
-            <div className="space-y-1.5">
-              <Label>Subtasks</Label>
-              <SubtaskList parentTask={task} />
-            </div>
-          )}
-
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={() => {
-              deleteTask.mutate(task.id);
-              closeTaskDetail();
-            }}
-          >
-            <Trash2 className="h-4 w-4" />
-            Delete task
-          </Button>
         </div>
-      )}
-    </SlideOver>
+
+        <div className="mt-5">
+          <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-slate-400">Description</p>
+          <Textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            onBlur={() => updateTask.mutate({ description: description ? textToDoc(description) : null })}
+            placeholder="No description"
+            className="min-h-[60px] rounded-[10px] border-slate-200 bg-slate-50 text-sm"
+          />
+        </div>
+
+        <div className="mt-5 border-t border-slate-100 pt-5">
+          <div className="mb-1 flex items-center gap-2">
+            <ListChecks className="h-4 w-4 text-slate-400" />
+            <span className="text-sm font-medium text-slate-900">Subtasks</span>
+          </div>
+          <p className="mb-2.5 text-xs text-slate-400">Break work into smaller steps</p>
+          <SubtaskList parentTask={task} />
+        </div>
+      </div>
+    </>
   );
 }

@@ -82,13 +82,18 @@ export async function getAreaDashboard(userId: string, id: string) {
       where: { userId, areaId: id, parentTaskId: null },
       orderBy: [{ status: "asc" }, { order: "asc" }],
       include: {
-        project: { select: { id: true, name: true, color: true } },
+        project: { select: { id: true, name: true, color: true, icon: true } },
         subtasks: { orderBy: { order: "asc" } },
       },
     }),
     prisma.resource.findMany({
       where: { userId, areas: { some: { id } } },
       orderBy: { createdAt: "desc" },
+      include: {
+        projects: { select: { id: true, name: true, color: true, icon: true } },
+        areas: { select: { id: true, name: true, color: true, icon: true } },
+        tasks: { select: { id: true, title: true, status: true } },
+      },
     }),
   ]);
 

@@ -1,12 +1,12 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Calendar, CircleDot, Columns3, Flag, Layers, LayoutGrid, List, Plus } from "lucide-react";
 import type { Priority, Project, ProjectQuery, ProjectStatus } from "@mogoj/shared";
 import { useProjects, useMoveProject, useDeleteProject } from "@/hooks/useProjects";
 import { useAreas } from "@/hooks/useAreas";
+import { useUIStore } from "@/store/useUIStore";
 import { getApiErrorMessage } from "@/lib/api";
 import { matchesRelativeDate, RELATIVE_DATE_OPTIONS } from "@/lib/relativeDate";
 import { PRIORITY_ORDER, sortItems } from "@/lib/sort";
@@ -14,8 +14,10 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { Button } from "@/components/shared/Button";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { ViewToggle } from "@/components/shared/ViewToggle";
+import { AnimatedViewSwitch } from "@/components/shared/AnimatedViewSwitch";
 import { FilterPopover, type FilterFieldConfig, type FilterState } from "@/components/shared/FilterPopover";
 import { SortPopover, type SortValue } from "@/components/shared/SortPopover";
+import { PortfolioMetricStrip } from "@/components/projects/PortfolioMetricStrip";
 import { ProjectGrid } from "@/components/projects/ProjectGrid";
 import { ProjectList } from "@/components/projects/ProjectList";
 import { NewProjectModal } from "@/components/projects/NewProjectModal";
@@ -53,7 +55,7 @@ const STATUS_OPTIONS = [
 ];
 
 export default function ProjectsPage() {
-  const router = useRouter();
+  const openProjectDetail = useUIStore((s) => s.openProjectDetail);
   const [view, setView] = useState<ViewMode>("card");
   const [filters, setFilters] = useState<FilterState>({});
   const [sort, setSort] = useState<SortValue>({ field: "dueDate", direction: "asc" });
@@ -137,6 +139,8 @@ export default function ProjectsPage() {
         }
       />
 
+      <PortfolioMetricStrip projects={visibleProjects} />
+
       <div className="mb-4 flex items-center justify-between gap-2">
         <ViewToggle value={view} onChange={setView} options={VIEW_OPTIONS} />
         <div className="flex gap-2">
@@ -145,23 +149,31 @@ export default function ProjectsPage() {
         </div>
       </div>
 
-      {view === "kanban" && (
-        <KanbanBoard
-          items={visibleProjects}
-          isLoading={isLoading}
-          statuses={PROJECT_KANBAN_COLUMNS}
-          visuals={PROJECT_COLUMN_VISUALS}
-          getStatus={(project) => project.status}
-          withStatus={(project, status, order) => ({ ...project, status, order })}
-          onMove={handleMove}
-          renderContent={(project) => <ProjectKanbanCardContent project={project} />}
-          onOpen={(project) => router.push(`/projects/${project.id}`)}
-          onDelete={(project) => setProjectToDelete(project)}
-          emptyLabel="No projects"
-        />
-      )}
-      {view === "list" && <ProjectList projects={visibleProjects} isLoading={isLoading} />}
-      {view === "card" && <ProjectGrid projects={visibleProjects} isLoading={isLoading} />}
+      <AnimatedViewSwitch index={VIEW_OPTIONS.findIndex((o) => o.value === view)}>
+        {[
+          <KanbanBoard
+            key="kanban"
+            items={visibleProjects}
+            isLoading={isLoading}
+            statuses={PROJECT_KANBAN_COLUMNS}
+            visuals={PROJECT_COLUMN_VISUALS}
+            getStatus={(project) => project.status}
+            withStatus={(project, status, order) => ({ ...project, status, order })}
+            onMove={handleMove}
+            renderContent={(project) => <ProjectKanbanCardContent project={project} />}
+            onOpen={(project) => openProjectDetail(project.id)}
+            onDelete={(project) => setProjectToDelete(project)}
+            emptyLabel="No projects"
+          />,
+          <ProjectList
+            key="list"
+            projects={visibleProjects}
+            isLoading={isLoading}
+            onDelete={(project) => setProjectToDelete(project)}
+          />,
+          <ProjectGrid key="card" projects={visibleProjects} isLoading={isLoading} />,
+        ]}
+      </AnimatedViewSwitch>
 
       <NewProjectModal open={newProjectOpen} onOpenChange={setNewProjectOpen} />
 

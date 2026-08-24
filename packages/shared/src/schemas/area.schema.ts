@@ -4,8 +4,8 @@ import { AreaStatus } from "../constants/enums";
 export const createAreaSchema = z.object({
   name: z.string().min(1).max(100),
   description: z.string().max(2000).optional(),
-  color: z.string().regex(/^#[0-9a-fA-F]{6}$/).default("#6366f1"),
-  icon: z.string().max(50).default("folder"),
+  color: z.string().regex(/^#[0-9a-fA-F]{6}$/).default("#000000"),
+  icon: z.string().max(1000).default("Folder"),
   order: z.number().optional(),
 });
 export type CreateAreaInput = z.infer<typeof createAreaSchema>;

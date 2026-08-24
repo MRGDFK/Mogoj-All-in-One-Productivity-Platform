@@ -10,12 +10,12 @@ import {
   FileText,
   Archive,
   Settings,
-  Circle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAreas } from "@/hooks/useAreas";
 import { useUnprocessedInboxCount } from "@/hooks/useInbox";
 import { Badge } from "@/components/shared/Badge";
+import { EntityIcon } from "@/components/shared/EntityIcon";
 
 const NAV_ITEMS = [
   { href: "/", label: "HQ Dashboard", icon: LayoutDashboard },
@@ -32,18 +32,18 @@ export function Sidebar() {
 
   return (
     <aside className="flex h-full w-64 shrink-0 flex-col border-r border-border bg-card">
-      <div className="flex h-14 items-center border-b border-border px-4">
-        <Link href="/" className="text-base font-semibold tracking-tight">
+      <div className="flex h-10 items-center border-b border-border px-4">
+        <Link href="/" className="text-sm font-semibold tracking-tight">
           Mogoj
         </Link>
       </div>
 
-      <nav className="flex-1 space-y-6 overflow-y-auto px-3 py-4">
+      <nav className="flex-1 space-y-4 overflow-y-auto px-3 py-2">
         <div className="space-y-1">
           <Link
             href="/inbox"
             className={cn(
-              "flex items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
+              "flex items-center justify-between rounded-md px-3 py-1.5 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
               pathname === "/inbox" && "bg-accent text-accent-foreground",
             )}
           >
@@ -65,7 +65,7 @@ export function Sidebar() {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
+                  "flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
                   active && "bg-accent text-accent-foreground",
                 )}
               >
@@ -91,18 +91,18 @@ export function Sidebar() {
                   key={area.id}
                   href={href}
                   className={cn(
-                    "flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
+                    "flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
                     active && "bg-accent text-accent-foreground",
                   )}
                 >
-                  <Circle className="h-2.5 w-2.5 shrink-0 fill-current" style={{ color: area.color }} />
+                  <EntityIcon icon={area.icon} color={area.color} size={14} />
                   <span className="truncate">{area.name}</span>
                 </Link>
               );
             })}
             <Link
               href="/areas"
-              className="block rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+              className="block rounded-md px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
             >
               View all areas
             </Link>
@@ -110,11 +110,11 @@ export function Sidebar() {
         </div>
       </nav>
 
-      <div className="border-t border-border p-3">
+      <div className="border-t border-border p-2">
         <Link
           href="/settings"
           className={cn(
-            "flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
+            "flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground",
             pathname === "/settings" && "bg-accent text-accent-foreground",
           )}
         >

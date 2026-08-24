@@ -38,13 +38,13 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="rounded-lg border border-border bg-card p-6 shadow-sm">
+    <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
       <h1 className="text-lg font-semibold">Create your account</h1>
-      <p className="mt-1 text-sm text-muted-foreground">
+      <p className="mt-1 text-xs text-muted-foreground">
         Set up your PARA workspace in a few seconds.
       </p>
 
-      <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+      <form onSubmit={handleSubmit} className="mt-4 space-y-3">
         <div className="space-y-1.5">
           <Label htmlFor="name">Name</Label>
           <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required />
@@ -80,7 +80,7 @@ export default function RegisterPage() {
         </Button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-muted-foreground">
+      <p className="mt-4 text-center text-xs text-muted-foreground">
         Already have an account?{" "}
         <Link href="/login" className="font-medium text-primary hover:underline">
           Log in

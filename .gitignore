@@ -20,3 +20,5 @@ pnpm-debug.log*
 .idea/
 apps/api/prisma/dev.db
 tsconfig.tsbuildinfo
+.claude
+CLAUDE.md

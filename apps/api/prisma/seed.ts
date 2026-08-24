@@ -22,7 +22,7 @@ async function main() {
       userId: user.id,
       name: "Personal",
       color: "#f97316",
-      icon: "home",
+      icon: "Home",
       order: 0,
     },
   });
@@ -31,8 +31,8 @@ async function main() {
     data: {
       userId: user.id,
       name: "Work",
-      color: "#6366f1",
-      icon: "briefcase",
+      color: "#000000",
+      icon: "Briefcase",
       order: 1,
     },
   });
@@ -88,12 +88,53 @@ async function main() {
   await prisma.resource.create({
     data: {
       userId: user.id,
-      projectId: websiteProject.id,
+      projects: { connect: [{ id: websiteProject.id }] },
+      areas: { connect: [{ id: workArea.id }] },
       title: "Brand guidelines",
-      type: "note",
-      content: { type: "doc", content: [] },
-      tags: ["branding"],
+      type: "link",
+      url: "https://example.com/brand-guidelines",
+      tags: {
+        connectOrCreate: [
+          {
+            where: { userId_name: { userId: user.id, name: "branding" } },
+            create: { userId: user.id, name: "branding", color: "blue" },
+          },
+        ],
+      },
     },
+  });
+
+  await prisma.note.createMany({
+    data: [
+      {
+        userId: user.id,
+        projectId: websiteProject.id,
+        title: "Launch checklist",
+        content: {
+          type: "doc",
+          content: [
+            {
+              type: "paragraph",
+              content: [{ type: "text", text: "Domain, hosting, analytics, and SEO basics before go-live." }],
+            },
+          ],
+        },
+      },
+      {
+        userId: user.id,
+        projectId: websiteProject.id,
+        title: "Design inspiration",
+        content: {
+          type: "doc",
+          content: [
+            {
+              type: "paragraph",
+              content: [{ type: "text", text: "Collect a few reference sites for the hero layout." }],
+            },
+          ],
+        },
+      },
+    ],
   });
 
   await prisma.inboxItem.create({

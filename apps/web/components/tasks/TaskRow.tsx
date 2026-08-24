@@ -13,7 +13,7 @@ export function TaskRow({ task }: { task: Task }) {
   const overdue = isOverdue(task.dueDate);
 
   return (
-    <li className="flex items-center gap-3 py-2.5">
+    <li className="flex items-center gap-2 py-1.5">
       <button
         type="button"
         onClick={(e) => {

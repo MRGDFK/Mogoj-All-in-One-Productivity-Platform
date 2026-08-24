@@ -1,6 +1,11 @@
-import Link from "next/link";
+"use client";
+
+import { FolderKanban } from "lucide-react";
 import type { Project } from "@mogoj/shared";
 import { Badge, PriorityBadge } from "@/components/shared/Badge";
+import { DeadlineBadge } from "@/components/tasks/DeadlineBadge";
+import { EntityIcon } from "@/components/shared/EntityIcon";
+import { useUIStore } from "@/store/useUIStore";
 
 const STATUS_VARIANT = {
   active: "primary",
@@ -10,24 +15,47 @@ const STATUS_VARIANT = {
 } as const;
 
 export function ProjectCard({ project }: { project: Project }) {
+  const openProjectDetail = useUIStore((s) => s.openProjectDetail);
+  const totalTasks = project.totalTasks ?? 0;
+  const completedTasks = project.completedTasks ?? 0;
+  const progressPct = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
   return (
-    <Link
-      href={`/projects/${project.id}`}
-      className="flex flex-col gap-2 rounded-lg border border-border bg-card p-4 transition-colors hover:bg-accent"
+    <button
+      type="button"
+      onClick={() => openProjectDetail(project.id)}
+      className="flex w-full flex-col gap-2 rounded-lg border border-border bg-card p-3 text-left transition-colors hover:bg-accent"
     >
-      <div className="flex items-center justify-between gap-2">
-        <p className="truncate font-medium">{project.name}</p>
-        <PriorityBadge priority={project.priority} />
+      <div className="flex items-center gap-2">
+        <EntityIcon icon={project.icon} color={project.color} size={16} background fallback={FolderKanban} className="rounded-md" />
+        <p className="truncate text-sm font-semibold tracking-tight">{project.name}</p>
       </div>
-      {project.description && (
-        <p className="line-clamp-2 text-sm text-muted-foreground">{project.description}</p>
+
+      {project.area?.name && (
+        <span className="flex items-center gap-1 text-xs text-muted-foreground">
+          <EntityIcon icon={project.area.icon} color={project.area.color} size={12} />
+          {project.area.name}
+        </span>
       )}
-      <div className="flex items-center justify-between pt-1">
-        {project.area && <span className="text-xs text-muted-foreground">{project.area.name}</span>}
+
+      {totalTasks > 0 && (
+        <div className="flex flex-col gap-1">
+          <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+            <div className="h-full bg-emerald-500" style={{ width: `${progressPct}%` }} />
+          </div>
+          <span className="text-[11px] text-muted-foreground">
+            {progressPct}% · {completedTasks}/{totalTasks} tasks
+          </span>
+        </div>
+      )}
+
+      <div className="flex flex-wrap items-center gap-2 pt-1">
         <Badge variant={STATUS_VARIANT[project.status]} className="capitalize">
           {project.status.replace("_", " ")}
         </Badge>
+        <PriorityBadge priority={project.priority} />
+        <DeadlineBadge dueDate={project.endDate} />
       </div>
-    </Link>
+    </button>
   );
 }

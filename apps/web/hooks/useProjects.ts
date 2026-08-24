@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import type {
   ApiResponse,
   Project,
@@ -7,9 +8,30 @@ import type {
   CreateProjectInput,
   UpdateProjectInput,
 } from "@mogoj/shared";
-import { api } from "@/lib/api";
+import { api, getApiErrorMessage } from "@/lib/api";
+import { isListQueryKey } from "@/lib/queryCache";
 
 const PROJECTS_KEY = ["projects"] as const;
+
+// Only fields structurally identical between the write DTO and the read
+// model are safe to patch optimistically — areaId stays a bare string on
+// both sides, but Project embeds a resolved `area` object that this input
+// doesn't carry, so a reassignment still needs the post-settle refetch.
+function toProjectPatch(input: UpdateProjectInput): Partial<Project> {
+  const patch: Partial<Project> = {};
+  if (input.name !== undefined) patch.name = input.name;
+  if (input.description !== undefined) patch.description = input.description;
+  if (input.color !== undefined) patch.color = input.color;
+  if (input.icon !== undefined) patch.icon = input.icon;
+  if (input.priority !== undefined) patch.priority = input.priority;
+  if (input.status !== undefined) patch.status = input.status;
+  if (input.areaId !== undefined) patch.areaId = input.areaId;
+  if (input.coverImage !== undefined) patch.coverImage = input.coverImage;
+  if (input.order !== undefined) patch.order = input.order;
+  if (input.startDate !== undefined) patch.startDate = input.startDate ? input.startDate.toISOString() : null;
+  if (input.endDate !== undefined) patch.endDate = input.endDate ? input.endDate.toISOString() : null;
+  return patch;
+}
 
 export function useProjects(query: ProjectQuery = {}) {
   return useQuery({
@@ -68,7 +90,36 @@ export function useUpdateProject(id: string) {
       if (!data.success) throw new Error(data.message);
       return data.data;
     },
-    onSuccess: () => {
+    onMutate: async (input) => {
+      await queryClient.cancelQueries({ queryKey: PROJECTS_KEY });
+      const patch = toProjectPatch(input);
+
+      const previousProject = queryClient.getQueryData<Project>([...PROJECTS_KEY, id]);
+      const previousLists = queryClient.getQueriesData<Project[]>({
+        queryKey: PROJECTS_KEY,
+        predicate: (query) => isListQueryKey(query.queryKey),
+      });
+
+      if (previousProject) {
+        queryClient.setQueryData<Project>([...PROJECTS_KEY, id], { ...previousProject, ...patch });
+      }
+      queryClient.setQueriesData<Project[]>(
+        { queryKey: PROJECTS_KEY, predicate: (query) => isListQueryKey(query.queryKey) },
+        (old) => old?.map((p) => (p.id === id ? { ...p, ...patch } : p)),
+      );
+
+      return { previousProject, previousLists };
+    },
+    onError: (err, _input, context) => {
+      if (context?.previousProject) {
+        queryClient.setQueryData([...PROJECTS_KEY, id], context.previousProject);
+      }
+      for (const [key, data] of context?.previousLists ?? []) {
+        queryClient.setQueryData(key, data);
+      }
+      toast.error(getApiErrorMessage(err) || "Failed to update project");
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: PROJECTS_KEY });
     },
   });

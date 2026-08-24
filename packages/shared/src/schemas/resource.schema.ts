@@ -1,24 +1,32 @@
 import { z } from "zod";
-import { ResourceType } from "../constants/enums";
+import { ResourceType, ResourceStatus } from "../constants/enums";
 
 const tiptapDocSchema = z.object({
   type: z.literal("doc"),
   content: z.array(z.unknown()).optional(),
 }).passthrough();
 
+export const tagSchema = z.object({
+  name: z.string().min(1).max(50),
+  color: z.string().min(1),
+});
+export type TagInput = z.infer<typeof tagSchema>;
+
 export const createResourceSchema = z
   .object({
-    projectId: z.string().cuid().optional(),
+    projectIds: z.array(z.string().cuid()).max(20).default([]),
     areaIds: z.array(z.string().cuid()).max(20).default([]),
+    taskIds: z.array(z.string().cuid()).max(20).default([]),
     title: z.string().min(1).max(300),
     type: z.enum([ResourceType.NOTE, ResourceType.PDF, ResourceType.LINK, ResourceType.IMAGE]),
     content: tiptapDocSchema.optional(),
     url: z.string().url().optional(),
-    tags: z.array(z.string().min(1).max(50)).max(20).default([]),
+    icon: z.string().max(500).optional(),
+    tags: z.array(tagSchema).max(20).default([]),
   })
-  .refine((data) => data.projectId ?? data.areaIds.length > 0, {
-    message: "Resource must belong to either a project or at least one area",
-    path: ["projectId"],
+  .refine((data) => data.projectIds.length > 0 || data.areaIds.length > 0, {
+    message: "Resource must belong to at least one project or area",
+    path: ["projectIds"],
   })
   .refine(
     (data) => data.type === ResourceType.NOTE || Boolean(data.url),
@@ -27,12 +35,15 @@ export const createResourceSchema = z
 export type CreateResourceInput = z.infer<typeof createResourceSchema>;
 
 export const updateResourceSchema = z.object({
-  projectId: z.string().cuid().optional().nullable(),
+  projectIds: z.array(z.string().cuid()).max(20).optional(),
   areaIds: z.array(z.string().cuid()).max(20).optional(),
+  taskIds: z.array(z.string().cuid()).max(20).optional(),
   title: z.string().min(1).max(300).optional(),
+  status: z.enum([ResourceStatus.OPEN, ResourceStatus.CLOSED]).optional(),
   content: tiptapDocSchema.optional().nullable(),
   url: z.string().url().optional().nullable(),
-  tags: z.array(z.string().min(1).max(50)).max(20).optional(),
+  icon: z.string().max(500).optional().nullable(),
+  tags: z.array(tagSchema).max(20).optional(),
 });
 export type UpdateResourceInput = z.infer<typeof updateResourceSchema>;
 
