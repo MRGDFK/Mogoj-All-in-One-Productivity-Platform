@@ -3,16 +3,16 @@
 import { cn } from "@/lib/utils";
 
 interface AnimatedViewSwitchProps {
-  /** 0 | 1 | 2 — which panel is active */
+  /** Which panel is active (0-based) */
   index: number;
-  /** Exactly 3 elements, always rendered */
+  /** One element per view, all always rendered */
   children: React.ReactNode[];
   className?: string;
 }
 
 /**
  * Horizontal carousel that slides between always-mounted views.
- * The track is 300% wide (3 panels of 33.333% each = one viewport each)
+ * The track is N×100% wide (N panels of 100/N % each = one viewport each)
  * and slides via margin-left, NOT transform: a transformed (or
  * will-change: transform) ancestor becomes the containing block for
  * position: fixed descendants, which breaks dnd-kit's DragOverlay
@@ -28,14 +28,16 @@ export function AnimatedViewSwitch({
   return (
     <div className={cn("relative w-full overflow-x-clip", className)}>
       <div
-        className="flex w-[300%] items-start"
+        className="flex items-start"
         style={{
+          width: `${children.length * 100}%`,
           marginLeft: `calc(-${index} * 100%)`,
           transition: "margin-left 380ms cubic-bezier(0.4, 0, 0.2, 1)",
         }}
       >
         {children.map((child, i) => (
-          <div key={i} className="w-[33.333%] min-w-0 flex-shrink-0">
+          // Inactive panels are hidden from tab order and screen readers but stay mounted
+          <div key={i} className="min-w-0 flex-shrink-0" style={{ width: `${100 / children.length}%` }} inert={i !== index}>
             {child}
           </div>
         ))}

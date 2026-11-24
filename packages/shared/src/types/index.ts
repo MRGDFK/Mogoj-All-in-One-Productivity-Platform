@@ -191,6 +191,12 @@ export interface SearchResults {
   resources: Resource[];
 }
 
+/** Tasks created vs completed per period, oldest first; the last period contains today. */
+export interface Throughput {
+  unit: "week" | "month";
+  points: { periodStart: string; created: number; completed: number }[];
+}
+
 export interface HQDashboard {
   todayTasks: Task[];
   /** Open tasks due in the next 3 days (after today), soonest first. */

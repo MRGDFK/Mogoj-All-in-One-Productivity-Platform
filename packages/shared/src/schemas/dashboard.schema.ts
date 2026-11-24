@@ -5,3 +5,10 @@ export const dashboardQuerySchema = z.object({
   activityLimit: z.coerce.number().int().min(1).max(100).default(20),
 });
 export type DashboardQuery = z.infer<typeof dashboardQuerySchema>;
+
+export const THROUGHPUT_RANGES = ["2w", "8w", "6m", "all"] as const;
+export const throughputQuerySchema = z.object({
+  range: z.enum(THROUGHPUT_RANGES).default("8w"),
+});
+export type ThroughputQuery = z.infer<typeof throughputQuerySchema>;
+export type ThroughputRange = ThroughputQuery["range"];

@@ -2,9 +2,9 @@
 
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Calendar, CircleDot, Columns3, Flag, Layers, LayoutGrid, List, Plus } from "lucide-react";
+import { Calendar, ChartGantt, CircleDot, Columns3, Flag, FolderKanban, Layers, LayoutGrid, List, Plus } from "lucide-react";
 import type { Priority, Project, ProjectQuery, ProjectStatus } from "@mogoj/shared";
-import { useProjects, useMoveProject, useDeleteProject } from "@/hooks/useProjects";
+import { useProjects, useMoveProject, useDeleteProject, useUpdateProjectById } from "@/hooks/useProjects";
 import { useAreas } from "@/hooks/useAreas";
 import { useUIStore } from "@/store/useUIStore";
 import { getApiErrorMessage } from "@/lib/api";
@@ -15,6 +15,9 @@ import { Button } from "@/components/shared/Button";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { ViewToggle } from "@/components/shared/ViewToggle";
 import { AnimatedViewSwitch } from "@/components/shared/AnimatedViewSwitch";
+import { TimelineView, projectToTimelineItem, spanToDates } from "@/components/shared/TimelineView";
+import { dueDateForDay, localDayKey } from "@/lib/calendarGrid";
+import { dayIndex } from "@/lib/timeline";
 import { FilterPopover, type FilterFieldConfig, type FilterState } from "@/components/shared/FilterPopover";
 import { SortPopover, type SortValue } from "@/components/shared/SortPopover";
 import { PortfolioMetricStrip } from "@/components/projects/PortfolioMetricStrip";
@@ -26,12 +29,13 @@ import { ProjectKanbanCardContent } from "@/components/projects/ProjectKanbanCar
 import { PROJECT_COLUMN_VISUALS, PROJECT_KANBAN_COLUMNS } from "@/components/projects/kanbanColumns";
 import { useKanbanVisuals } from "@/hooks/useKanbanVisuals";
 
-type ViewMode = "kanban" | "list" | "card";
+type ViewMode = (typeof VIEW_OPTIONS)[number]["value"];
 
 const VIEW_OPTIONS = [
   { value: "kanban" as const, label: "Kanban", icon: Columns3 },
   { value: "list" as const, label: "List", icon: List },
   { value: "card" as const, label: "Card", icon: LayoutGrid },
+  { value: "timeline" as const, label: "Timeline", icon: ChartGantt },
 ];
 
 const SORT_FIELDS = [
@@ -109,6 +113,12 @@ export default function ProjectsPage() {
     });
   }, [projects, filters.dueDate, sort]);
 
+  const updateProjectById = useUpdateProjectById();
+  const timelineItems = useMemo(() => {
+    const today = dayIndex(localDayKey());
+    return visibleProjects.map((project) => projectToTimelineItem(project, today));
+  }, [visibleProjects]);
+
   function handleMove(vars: { id: string; status: ProjectStatus; order: number }, revert: () => void) {
     moveProject.mutate(vars, {
       onError: (err) => {
@@ -176,6 +186,22 @@ export default function ProjectsPage() {
             onDelete={(project) => setProjectToDelete(project)}
           />,
           <ProjectGrid key="card" projects={visibleProjects} isLoading={isLoading} />,
+          <TimelineView
+            key="timeline"
+            items={timelineItems}
+            fallbackIcon={FolderKanban}
+            onOpen={openProjectDetail}
+            onReschedule={(id, span) => {
+              const { start, end } = spanToDates(span);
+              updateProjectById.mutate({ id, input: { startDate: start, endDate: end } });
+            }}
+            onScheduleToday={(id) => {
+              const today = dueDateForDay(localDayKey());
+              updateProjectById.mutate({ id, input: { startDate: today, endDate: today } });
+            }}
+            onNew={() => setNewProjectOpen(true)}
+            newLabel="New project"
+          />,
         ]}
       </AnimatedViewSwitch>
 

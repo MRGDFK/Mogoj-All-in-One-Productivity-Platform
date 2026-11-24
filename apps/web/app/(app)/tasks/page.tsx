@@ -2,9 +2,9 @@
 
 import { use, useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { Calendar, CircleDot, Columns3, Flag, FolderKanban, Layers, LayoutGrid, List, Plus } from "lucide-react";
+import { Calendar, CalendarDays, ChartGantt, CircleDot, Columns3, Flag, FolderKanban, Layers, LayoutGrid, List, ListTodo, Plus } from "lucide-react";
 import type { Priority, Task, TaskQuery, TaskStatus } from "@mogoj/shared";
-import { useTasks, useCreateTask, useMoveTask, useDeleteTask } from "@/hooks/useTasks";
+import { useTasks, useCreateTask, useMoveTask, useDeleteTask, useUpdateTaskById } from "@/hooks/useTasks";
 import { useAreas } from "@/hooks/useAreas";
 import { useProjects } from "@/hooks/useProjects";
 import { useUIStore } from "@/store/useUIStore";
@@ -18,6 +18,10 @@ import { Button } from "@/components/shared/Button";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { ViewToggle } from "@/components/shared/ViewToggle";
 import { AnimatedViewSwitch } from "@/components/shared/AnimatedViewSwitch";
+import { TaskMonthCalendar } from "@/components/shared/TaskMonthCalendar";
+import { TimelineView, spanToDates, taskToTimelineItem } from "@/components/shared/TimelineView";
+import { dueDateForDay, localDayKey } from "@/lib/calendarGrid";
+import { dayIndex } from "@/lib/timeline";
 import { FilterPopover, type FilterFieldConfig, type FilterState } from "@/components/shared/FilterPopover";
 import { SortPopover, type SortValue } from "@/components/shared/SortPopover";
 import { TaskList } from "@/components/tasks/TaskList";
@@ -30,12 +34,14 @@ import { TaskKanbanCardContent } from "@/components/projects/TaskKanbanCardConte
 import { TASK_COLUMN_VISUALS, TASK_KANBAN_COLUMNS } from "@/components/projects/kanbanColumns";
 import { useKanbanVisuals } from "@/hooks/useKanbanVisuals";
 
-type ViewMode = "kanban" | "list" | "card";
+type ViewMode = (typeof VIEW_OPTIONS)[number]["value"];
 
 const VIEW_OPTIONS = [
   { value: "kanban" as const, label: "Kanban", icon: Columns3 },
   { value: "list" as const, label: "List", icon: List },
   { value: "card" as const, label: "Card", icon: LayoutGrid },
+  { value: "timeline" as const, label: "Timeline", icon: ChartGantt },
+  { value: "calendar" as const, label: "Calendar", icon: CalendarDays },
 ];
 
 const SORT_FIELDS = [
@@ -182,6 +188,12 @@ export default function TasksPage({ searchParams }: { searchParams: Promise<{ du
     });
   }, [tasks, filters.dueDate, sort]);
 
+  const updateTaskById = useUpdateTaskById();
+  const timelineItems = useMemo(() => {
+    const today = dayIndex(localDayKey());
+    return visibleTasks.map((task) => taskToTimelineItem(task, today));
+  }, [visibleTasks]);
+
   function handleMove(vars: { id: string; status: TaskStatus; order: number }, revert: () => void) {
     moveTask.mutate(vars, {
       onError: (err) => {
@@ -283,6 +295,21 @@ export default function TasksPage({ searchParams }: { searchParams: Promise<{ du
             onTaskClick={(task) => openTaskDetail(task.id)}
             onTaskMenu={(task) => setTaskToDelete(task)}
           />,
+          <TimelineView
+            key="timeline"
+            items={timelineItems}
+            fallbackIcon={ListTodo}
+            onOpen={openTaskDetail}
+            onReschedule={(id, span) => {
+              const { start, end } = spanToDates(span);
+              updateTaskById.mutate({ id, input: { startDate: start, dueDate: end } });
+            }}
+            onScheduleToday={(id) => updateTaskById.mutate({ id, input: { dueDate: dueDateForDay(localDayKey()) } })}
+            onNew={() => setNewTaskOpen(true)}
+            newLabel="New task"
+          />,
+          // Fills the viewport so day cells get real height
+          <TaskMonthCalendar key="calendar" className="h-[calc(100vh-15rem)] min-h-[560px]" />,
         ]}
       </AnimatedViewSwitch>
 

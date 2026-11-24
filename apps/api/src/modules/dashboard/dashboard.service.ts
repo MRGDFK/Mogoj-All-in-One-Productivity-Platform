@@ -1,7 +1,8 @@
-import type { DashboardQuery } from "@mogoj/shared";
+import type { DashboardQuery, Throughput, ThroughputQuery } from "@mogoj/shared";
 import { prisma } from "../../config/db.js";
 import { getUnprocessedCount } from "../inbox/inbox.service.js";
 import { withTaskCounts } from "../projects/project.service.js";
+import { bucketByPeriod, periodStarts } from "./throughput.js";
 
 const THROUGHPUT_WEEKS = 8;
 
@@ -107,4 +108,26 @@ export async function getHQDashboard(userId: string, query: DashboardQuery) {
     activeProjectCount,
     weeklyThroughput: bucketThroughput(throughputLogs, firstWeek, THROUGHPUT_WEEKS),
   };
+}
+
+const TASK_THROUGHPUT = { entityType: "task" as const, action: { in: ["created" as const, "completed" as const] } };
+
+/** Task created vs completed for the HQ activity chart, bucketed by week (2w/8w) or month (6m/all). */
+export async function getThroughput(userId: string, query: ThroughputQuery): Promise<Throughput> {
+  const earliest =
+    query.range === "all"
+      ? ((
+          await prisma.activityLog.findFirst({
+            where: { userId, ...TASK_THROUGHPUT },
+            orderBy: { createdAt: "asc" },
+            select: { createdAt: true },
+          })
+        )?.createdAt ?? null)
+      : null;
+  const { unit, starts } = periodStarts(query.range, new Date(), earliest);
+  const logs = await prisma.activityLog.findMany({
+    where: { userId, ...TASK_THROUGHPUT, createdAt: { gte: starts[0] } },
+    select: { action: true, createdAt: true },
+  });
+  return { unit, points: bucketByPeriod(logs, starts, unit) };
 }

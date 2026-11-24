@@ -125,6 +125,38 @@ export function useUpdateProject(id: string) {
   });
 }
 
+// For timeline drags, where the project is only known at drop time
+export function useUpdateProjectById() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, input }: { id: string; input: UpdateProjectInput }) => {
+      const { data } = await api.patch<ApiResponse<Project>>(`/projects/${id}`, input);
+      if (!data.success) throw new Error(data.message);
+      return data.data;
+    },
+    onMutate: async ({ id, input }) => {
+      await queryClient.cancelQueries({ queryKey: PROJECTS_KEY });
+      const patch = toProjectPatch(input);
+      const previousLists = queryClient.getQueriesData<Project[]>({
+        queryKey: PROJECTS_KEY,
+        predicate: (query) => isListQueryKey(query.queryKey),
+      });
+      queryClient.setQueriesData<Project[]>(
+        { queryKey: PROJECTS_KEY, predicate: (query) => isListQueryKey(query.queryKey) },
+        (old) => old?.map((p) => (p.id === id ? { ...p, ...patch } : p)),
+      );
+      return { previousLists };
+    },
+    onError: (err, _vars, context) => {
+      for (const [key, data] of context?.previousLists ?? []) queryClient.setQueryData(key, data);
+      toast.error(getApiErrorMessage(err) || "Failed to update project");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: PROJECTS_KEY });
+    },
+  });
+}
+
 // Used by the Projects Kanban board's drag-and-drop, where the moved
 // project's id is only known at drop time — unlike useUpdateProject, it
 // isn't bound to one project up front.

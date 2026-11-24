@@ -67,6 +67,7 @@ function useInvalidateTasks() {
     queryClient.invalidateQueries({ queryKey: TASKS_KEY });
     queryClient.invalidateQueries({ queryKey: PROJECTS_KEY });
     queryClient.invalidateQueries({ queryKey: DASHBOARD_KEY });
+    queryClient.invalidateQueries({ queryKey: ["throughput"] });
   };
 }
 
@@ -82,50 +83,77 @@ export function useCreateTask() {
   });
 }
 
+type QueryClient = ReturnType<typeof useQueryClient>;
+type PatchContext = Awaited<ReturnType<typeof applyTaskPatch>>;
+
+/** Optimistically applies an update to every cached view of one task; returns what revertTaskPatch needs. */
+async function applyTaskPatch(queryClient: QueryClient, id: string, input: UpdateTaskInput) {
+  await queryClient.cancelQueries({ queryKey: TASKS_KEY });
+  const patch = toTaskPatch(input);
+
+  const previousTask = queryClient.getQueryData<Task>([...TASKS_KEY, id]);
+  const previousLists = queryClient.getQueriesData<Task[]>({
+    queryKey: TASKS_KEY,
+    predicate: (query) => isListQueryKey(query.queryKey),
+  });
+
+  if (previousTask) {
+    queryClient.setQueryData<Task>([...TASKS_KEY, id], { ...previousTask, ...patch });
+  }
+  queryClient.setQueriesData<Task[]>(
+    { queryKey: TASKS_KEY, predicate: (query) => isListQueryKey(query.queryKey) },
+    (old) => old?.map((t) => (t.id === id ? { ...t, ...patch } : t)),
+  );
+
+  // HQ embeds tasks too: tick it there instantly, the settle refetch recounts
+  await queryClient.cancelQueries({ queryKey: DASHBOARD_KEY });
+  const previousDashboards = queryClient.getQueriesData<HQDashboard>({ queryKey: DASHBOARD_KEY });
+  const patchTask = (t: Task) => (t.id === id ? { ...t, ...patch } : t);
+  queryClient.setQueriesData<HQDashboard>({ queryKey: DASHBOARD_KEY }, (old) =>
+    old && { ...old, todayTasks: old.todayTasks.map(patchTask), upcomingTasks: old.upcomingTasks?.map(patchTask) ?? [] },
+  );
+
+  return { previousTask, previousLists, previousDashboards };
+}
+
+function revertTaskPatch(queryClient: QueryClient, id: string, context: PatchContext | undefined) {
+  if (context?.previousTask) {
+    queryClient.setQueryData([...TASKS_KEY, id], context.previousTask);
+  }
+  for (const [key, data] of [...(context?.previousLists ?? []), ...(context?.previousDashboards ?? [])]) {
+    queryClient.setQueryData(key, data);
+  }
+}
+
+async function patchTask(id: string, input: UpdateTaskInput) {
+  const { data } = await api.patch<ApiResponse<Task>>(`/tasks/${id}`, input);
+  if (!data.success) throw new Error(data.message);
+  return data.data;
+}
+
 export function useUpdateTask(id: string) {
   const queryClient = useQueryClient();
   const invalidate = useInvalidateTasks();
   return useMutation({
-    mutationFn: async (input: UpdateTaskInput) => {
-      const { data } = await api.patch<ApiResponse<Task>>(`/tasks/${id}`, input);
-      if (!data.success) throw new Error(data.message);
-      return data.data;
-    },
-    onMutate: async (input) => {
-      await queryClient.cancelQueries({ queryKey: TASKS_KEY });
-      const patch = toTaskPatch(input);
-
-      const previousTask = queryClient.getQueryData<Task>([...TASKS_KEY, id]);
-      const previousLists = queryClient.getQueriesData<Task[]>({
-        queryKey: TASKS_KEY,
-        predicate: (query) => isListQueryKey(query.queryKey),
-      });
-
-      if (previousTask) {
-        queryClient.setQueryData<Task>([...TASKS_KEY, id], { ...previousTask, ...patch });
-      }
-      queryClient.setQueriesData<Task[]>(
-        { queryKey: TASKS_KEY, predicate: (query) => isListQueryKey(query.queryKey) },
-        (old) => old?.map((t) => (t.id === id ? { ...t, ...patch } : t)),
-      );
-
-      // HQ embeds tasks too: tick it there instantly, the settle refetch recounts
-      await queryClient.cancelQueries({ queryKey: DASHBOARD_KEY });
-      const previousDashboards = queryClient.getQueriesData<HQDashboard>({ queryKey: DASHBOARD_KEY });
-      const patchTask = (t: Task) => (t.id === id ? { ...t, ...patch } : t);
-      queryClient.setQueriesData<HQDashboard>({ queryKey: DASHBOARD_KEY }, (old) =>
-        old && { ...old, todayTasks: old.todayTasks.map(patchTask), upcomingTasks: old.upcomingTasks?.map(patchTask) ?? [] },
-      );
-
-      return { previousTask, previousLists, previousDashboards };
-    },
+    mutationFn: (input: UpdateTaskInput) => patchTask(id, input),
+    onMutate: (input) => applyTaskPatch(queryClient, id, input),
     onError: (err, _input, context) => {
-      if (context?.previousTask) {
-        queryClient.setQueryData([...TASKS_KEY, id], context.previousTask);
-      }
-      for (const [key, data] of [...(context?.previousLists ?? []), ...(context?.previousDashboards ?? [])]) {
-        queryClient.setQueryData(key, data);
-      }
+      revertTaskPatch(queryClient, id, context);
+      toast.error(getApiErrorMessage(err) || "Failed to update task");
+    },
+    onSettled: invalidate,
+  });
+}
+
+// For calendar/timeline drags, where the task is only known at drop time
+export function useUpdateTaskById() {
+  const queryClient = useQueryClient();
+  const invalidate = useInvalidateTasks();
+  return useMutation({
+    mutationFn: ({ id, input }: { id: string; input: UpdateTaskInput }) => patchTask(id, input),
+    onMutate: ({ id, input }) => applyTaskPatch(queryClient, id, input),
+    onError: (err, { id }, context) => {
+      revertTaskPatch(queryClient, id, context);
       toast.error(getApiErrorMessage(err) || "Failed to update task");
     },
     onSettled: invalidate,

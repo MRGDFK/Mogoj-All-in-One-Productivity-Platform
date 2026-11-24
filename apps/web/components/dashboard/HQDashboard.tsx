@@ -11,7 +11,8 @@ import { TodayTasks } from "@/components/dashboard/TodayTasks";
 import { ActiveProjects } from "@/components/dashboard/ActiveProjects";
 import { RecentResources } from "@/components/dashboard/RecentResources";
 import { ActivityFeed } from "@/components/dashboard/ActivityFeed";
-import { ThroughputChart } from "@/components/dashboard/ThroughputChart";
+import { ProjectActivityCard } from "@/components/dashboard/ThroughputChart";
+import { HQCalendarWidget } from "@/components/dashboard/HQCalendarWidget";
 import { NewTaskModal } from "@/components/tasks/NewTaskModal";
 import { useQuickCaptureShortcut } from "@/hooks/useQuickCaptureShortcut";
 import { useUIStore } from "@/store/useUIStore";
@@ -125,14 +126,8 @@ function QuickCaptureButton() {
   );
 }
 
-const RANGES = [
-  { label: "2W", weeks: 2 },
-  { label: "8W", weeks: 8 },
-] as const;
-
 export function HQDashboard() {
   const { data, isLoading } = useDashboard();
-  const [range, setRange] = useState<2 | 8>(8);
   const [newTask, setNewTask] = useState<{ projectId?: string; dueDate?: string } | null>(null);
 
   if (isLoading || !data) {
@@ -173,43 +168,7 @@ export function HQDashboard() {
       />
     </div>,
     <div key="main" className="grid grid-cols-1 gap-3 lg:grid-cols-3">
-      <Section
-        title="Created vs completed"
-        className="lg:col-span-2"
-        action={
-          <>
-            <span className="text-xs text-muted-foreground">Last {range} weeks</span>
-            <div className="flex rounded-lg bg-white/[0.04] p-0.5" role="group" aria-label="Chart range">
-              {RANGES.map((r) => (
-                <button
-                  key={r.label}
-                  type="button"
-                  onClick={() => setRange(r.weeks)}
-                  aria-pressed={range === r.weeks}
-                  className={cn(
-                    "rounded-md px-2 py-0.5 font-mono text-[11px] transition-colors duration-(--dur-fast)",
-                    range === r.weeks ? "bg-white/[0.09] text-foreground" : "text-muted-foreground hover:text-foreground",
-                  )}
-                >
-                  {r.label}
-                </button>
-              ))}
-            </div>
-          </>
-        }
-      >
-        <div className="-mt-1 mb-2 flex gap-4 text-xs text-muted-foreground">
-          <span className="flex items-center gap-1.5">
-            <span className="h-0.5 w-3 rounded-full bg-brand" />
-            Completed
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="h-0 w-3 border-t border-dashed border-[#5d616b]" />
-            Created
-          </span>
-        </div>
-        <ThroughputChart data={weeks.slice(-range)} />
-      </Section>
+      <ProjectActivityCard className="lg:col-span-2" />
       <Section
         title="Today"
         count={openToday.length}
@@ -231,13 +190,16 @@ export function HQDashboard() {
       <Section title="Active projects" count={data.activeProjectCount} className="lg:col-span-2">
         <ActiveProjects projects={data.activeProjects} onAddTask={(projectId) => setNewTask({ projectId })} />
       </Section>
+      <HQCalendarWidget />
+    </div>,
+    <div key="activity" className="grid grid-cols-1 gap-3 lg:grid-cols-3">
+      <Section title="Recent activity" className="lg:col-span-2">
+        <ActivityFeed activity={data.recentActivity} />
+      </Section>
       <Section title="Recent resources">
         <RecentResources resources={data.recentResources} />
       </Section>
     </div>,
-    <Section key="activity" title="Recent activity">
-      <ActivityFeed activity={data.recentActivity} />
-    </Section>,
   ];
 
   return (
