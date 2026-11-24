@@ -27,6 +27,8 @@ interface KanbanBoardProps<T extends BoardItem, S extends string> {
   onDelete?: (item: T) => void;
   emptyLabel: string;
   renderQuickAdd?: (status: S) => ReactNode;
+  /** Enables the per-column color picker. null resets to the default. */
+  onColorChange?: (status: string, color: string | null) => void;
 }
 
 export function KanbanBoard<T extends BoardItem, S extends string>({
@@ -43,6 +45,7 @@ export function KanbanBoard<T extends BoardItem, S extends string>({
   onDelete,
   emptyLabel,
   renderQuickAdd,
+  onColorChange,
 }: KanbanBoardProps<T, S>) {
   const {
     columns,
@@ -93,6 +96,7 @@ export function KanbanBoard<T extends BoardItem, S extends string>({
             renderItem={renderCard}
             isOver={activeItem !== null && overColumnStatus === column.status}
             quickAdd={renderQuickAdd?.(column.status)}
+            onColorChange={onColorChange}
           />
         ))}
       </div>

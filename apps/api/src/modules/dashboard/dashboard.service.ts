@@ -34,17 +34,20 @@ export function bucketThroughput(
   return buckets;
 }
 
-function endOfToday(): Date {
+function endOfToday(daysAhead = 0): Date {
   const d = new Date();
+  d.setDate(d.getDate() + daysAhead);
   d.setHours(23, 59, 59, 999);
   return d;
 }
+
+const UPCOMING_DAYS = 3;
 
 export async function getHQDashboard(userId: string, query: DashboardQuery) {
   const firstWeek = startOfWeek(new Date());
   firstWeek.setDate(firstWeek.getDate() - (THROUGHPUT_WEEKS - 1) * 7);
 
-  const [todayTasks, activeProjects, recentResources, recentActivity, inboxUnprocessedCount, activeProjectCount, throughputLogs] =
+  const [todayTasks, upcomingTasks, activeProjects, recentResources, recentActivity, inboxUnprocessedCount, activeProjectCount, throughputLogs] =
     await Promise.all([
       prisma.task.findMany({
         where: {
@@ -55,11 +58,21 @@ export async function getHQDashboard(userId: string, query: DashboardQuery) {
         orderBy: [{ dueDate: "asc" }, { priority: "desc" }],
         include: { project: { select: { id: true, name: true, color: true } } },
       }),
+      prisma.task.findMany({
+        where: {
+          userId,
+          status: { not: "done" },
+          dueDate: { gt: endOfToday(), lte: endOfToday(UPCOMING_DAYS) },
+        },
+        orderBy: [{ dueDate: "asc" }, { priority: "desc" }],
+        take: 5,
+        include: { project: { select: { id: true, name: true, color: true } } },
+      }),
       prisma.project.findMany({
         where: { userId, status: "active" },
         orderBy: { updatedAt: "desc" },
         take: 10,
-        include: { area: { select: { id: true, name: true, color: true } }, tasks: { select: { status: true } } },
+        include: { area: { select: { id: true, name: true, color: true, icon: true } }, tasks: { select: { status: true } } },
       }),
       prisma.resource.findMany({
         where: { userId },
@@ -86,6 +99,7 @@ export async function getHQDashboard(userId: string, query: DashboardQuery) {
 
   return {
     todayTasks,
+    upcomingTasks,
     activeProjects: activeProjects.map(withTaskCounts),
     recentResources,
     recentActivity,

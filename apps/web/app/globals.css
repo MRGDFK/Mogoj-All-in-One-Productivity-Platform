@@ -242,6 +242,52 @@ body::after {
   opacity: 1;
 }
 
+/*
+ * List rows (pair with .spotlight): a priority edge grows in from the left, the title
+ * nudges right and quick actions fade in. Pure CSS, so long lists cost no re-renders.
+ * Set --row-accent inline to tint the edge.
+ */
+.list-row {
+  transition: background-color var(--dur-fast) var(--ease-soft);
+}
+.list-row:hover {
+  background-color: rgb(255 255 255 / 0.025);
+}
+.row-edge {
+  position: absolute;
+  left: 0;
+  top: 22%;
+  bottom: 22%;
+  width: 2px;
+  border-radius: 2px;
+  background: var(--row-accent, var(--brand));
+  box-shadow: 0 0 8px var(--row-accent, var(--brand));
+  transform: scaleY(0);
+  transition: transform var(--dur-base) var(--ease-soft);
+}
+.row-nudge {
+  transition: translate var(--dur-base) var(--ease-soft);
+}
+.row-actions {
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease-soft);
+}
+.list-row:hover .row-edge {
+  transform: scaleY(1);
+}
+.list-row:hover .row-nudge {
+  translate: 2px 0;
+}
+.list-row:hover .row-actions,
+.list-row:focus-within .row-actions {
+  opacity: 1;
+}
+@media (hover: none) {
+  .row-actions {
+    opacity: 1;
+  }
+}
+
 * {
   border-color: var(--color-border);
 }

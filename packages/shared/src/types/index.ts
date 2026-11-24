@@ -58,6 +58,10 @@ export interface Area {
   order: number;
   createdAt: string;
   updatedAt: string;
+  /** List responses only: non-archived projects, and top-level tasks across direct + those projects. */
+  projectCount?: number;
+  openTaskCount?: number;
+  doneTaskCount?: number;
 }
 
 export interface Project {
@@ -189,6 +193,8 @@ export interface SearchResults {
 
 export interface HQDashboard {
   todayTasks: Task[];
+  /** Open tasks due in the next 3 days (after today), soonest first. */
+  upcomingTasks: Task[];
   activeProjects: Project[];
   recentResources: Resource[];
   recentActivity: ActivityLogEntry[];

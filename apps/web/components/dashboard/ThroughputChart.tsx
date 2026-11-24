@@ -13,7 +13,7 @@ export function ThroughputChart({ data }: { data: HQDashboard["weeklyThroughput"
   const rows = data.map((w) => ({ ...w, label: formatDate(w.weekStart, "MMM d") }));
 
   return (
-    <div className="h-64">
+    <div className="h-52">
       <ResponsiveContainer width="100%" height="100%">
         <ComposedChart data={rows} margin={{ top: 8, right: 4, bottom: 0, left: -20 }}>
           <defs>

@@ -21,7 +21,7 @@ export function TaskList({ tasks, isLoading, onTaskClick, onTaskMenu }: TaskList
   }
 
   return (
-    <ul>
+    <ul className="space-y-px">
       {tasks.map((task) => (
         <TaskListRow
           key={task.id}

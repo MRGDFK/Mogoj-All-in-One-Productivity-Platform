@@ -31,6 +31,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/shared/Ta
 import { KanbanBoard } from "@/components/projects/KanbanBoard";
 import { TaskKanbanCardContent } from "@/components/projects/TaskKanbanCardContent";
 import { TASK_COLUMN_VISUALS, TASK_KANBAN_COLUMNS } from "@/components/projects/kanbanColumns";
+import { useKanbanVisuals } from "@/hooks/useKanbanVisuals";
 import { TaskList } from "@/components/tasks/TaskList";
 import { NewTaskModal } from "@/components/tasks/NewTaskModal";
 import { NewResourceModal } from "@/components/resources/NewResourceModal";
@@ -72,6 +73,7 @@ const TASK_VIEW_OPTIONS: ViewToggleOption<TaskViewMode>[] = [
 ];
 
 export default function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { visuals: columnVisuals, setColor: setColumnColor } = useKanbanVisuals("task", TASK_COLUMN_VISUALS);
   const { id } = use(params);
   const router = useRouter();
   const { data: project, isLoading } = useProject(id);
@@ -363,7 +365,8 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                 items={visibleKanbanTasks}
                 isLoading={kanbanLoading}
                 statuses={TASK_KANBAN_COLUMNS}
-                visuals={TASK_COLUMN_VISUALS}
+                visuals={columnVisuals}
+            onColorChange={setColumnColor}
                 getStatus={(task) => task.status}
                 getPriority={(task) => task.priority}
                 withStatus={(task, status, order) => ({ ...task, status, order })}

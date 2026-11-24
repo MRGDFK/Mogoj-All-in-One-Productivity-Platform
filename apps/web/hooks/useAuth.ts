@@ -8,7 +8,7 @@ import type {
 } from "@mogoj/shared";
 import { api } from "@/lib/api";
 
-const ME_QUERY_KEY = ["auth", "me"] as const;
+export const ME_QUERY_KEY = ["auth", "me"] as const;
 
 async function fetchMe(): Promise<AuthUser | null> {
   try {

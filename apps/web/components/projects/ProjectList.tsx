@@ -4,7 +4,8 @@ import type { Project } from "@mogoj/shared";
 import { FolderKanban } from "lucide-react";
 import { Loader } from "@/components/shared/Loader";
 import { EmptyState } from "@/components/shared/EmptyState";
-import { ProjectRow } from "@/components/projects/ProjectRow";
+import { PROJECT_ROW_GRID, ProjectRow } from "@/components/projects/ProjectRow";
+import { cn } from "@/lib/utils";
 
 interface ProjectListProps {
   projects: Project[] | undefined;
@@ -26,22 +27,21 @@ export function ProjectList({ projects, isLoading, onDelete }: ProjectListProps)
   }
 
   return (
-    <table className="w-full border-collapse text-sm">
-      <thead>
-        <tr className="border-b border-border text-left text-xs text-muted-foreground">
-          <th className="py-1.5 pr-2 font-medium">Project Name</th>
-          <th className="py-1.5 pr-2 font-medium">Area</th>
-          <th className="py-1.5 pr-2 font-medium">Status</th>
-          <th className="py-1.5 pr-2 font-medium">Progress</th>
-          <th className="py-1.5 pr-2 font-medium">Deadline</th>
-          <th className="py-1.5 pr-2 font-medium">Actions</th>
-        </tr>
-      </thead>
-      <tbody className="divide-y divide-border">
+    <div className="text-sm">
+      <div className={cn(PROJECT_ROW_GRID, "border-b border-border px-3 pb-2 text-xs font-medium text-muted-foreground")}>
+        <span>Project</span>
+        <span>Area</span>
+        <span>Status</span>
+        <span>Priority</span>
+        <span>Progress</span>
+        <span>Deadline</span>
+        <span className="sr-only">Actions</span>
+      </div>
+      <div className="mt-1 space-y-px">
         {projects.map((project) => (
           <ProjectRow key={project.id} project={project} onDelete={onDelete} />
         ))}
-      </tbody>
-    </table>
+      </div>
+    </div>
   );
 }

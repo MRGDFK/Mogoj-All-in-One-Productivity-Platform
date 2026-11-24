@@ -4,9 +4,21 @@ import { ApiError } from "../../utils/ApiError.js";
 import { writeActivityLog } from "../activity/activity.service.js";
 
 export async function listAreas(userId: string, query: AreaQuery) {
-  return prisma.area.findMany({
+  const topLevel = { where: { parentTaskId: null }, select: { status: true } } as const;
+  const areas = await prisma.area.findMany({
     where: { userId, ...(query.status && { status: query.status }) },
     orderBy: { order: "asc" },
+    include: {
+      // projectId: null so a task with both an area and a project isn't counted twice
+      tasks: { where: { parentTaskId: null, projectId: null }, select: { status: true } },
+      projects: { where: { status: { not: "archived" } }, select: { tasks: topLevel } },
+    },
+  });
+
+  return areas.map(({ tasks, projects, ...area }) => {
+    const all = [...tasks, ...projects.flatMap((p) => p.tasks)];
+    const doneTaskCount = all.filter((t) => t.status === "done").length;
+    return { ...area, projectCount: projects.length, openTaskCount: all.length - doneTaskCount, doneTaskCount };
   });
 }
 

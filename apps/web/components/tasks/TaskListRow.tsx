@@ -1,8 +1,8 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useRef } from "react";
 import type { Task } from "@mogoj/shared";
-import { FolderKanban, MoreHorizontal } from "lucide-react";
+import { CalendarPlus, FolderKanban, MoreHorizontal } from "lucide-react";
 import { useUpdateTask } from "@/hooks/useTasks";
 import { CompletionIcon } from "@/components/shared/CompletionIcon";
 import { cn } from "@/lib/utils";
@@ -18,9 +18,14 @@ interface TaskListRowProps {
 
 function TaskListRowImpl({ task, onClick, onMenuClick }: TaskListRowProps) {
   const updateTask = useUpdateTask(task.id);
+  const dateRef = useRef<HTMLInputElement>(null);
 
   return (
-    <li className="flex items-center gap-2 border-b border-border py-2 px-3 transition-colors hover:bg-accent">
+    <li
+      className="list-row spotlight group flex items-center gap-2 rounded-lg px-3 py-2"
+      style={{ "--row-accent": `var(--prio-${task.priority})` } as React.CSSProperties}
+    >
+      <span className="row-edge" aria-hidden />
       <button
         type="button"
         onClick={(e) => {
@@ -33,7 +38,7 @@ function TaskListRowImpl({ task, onClick, onMenuClick }: TaskListRowProps) {
         <CompletionIcon done={task.status === "done"} className="h-4 w-4" />
       </button>
 
-      <button type="button" onClick={onClick} className="min-w-0 flex-1 text-left">
+      <button type="button" onClick={onClick} className="row-nudge min-w-0 flex-1 cursor-pointer text-left">
         <p className={cn("truncate text-sm font-medium", task.status === "done" && "text-muted-foreground line-through")}>
           {task.title}
         </p>
@@ -56,19 +61,43 @@ function TaskListRowImpl({ task, onClick, onMenuClick }: TaskListRowProps) {
       <PriorityBadge priority={task.priority} status={task.status} />
       <DeadlineBadge dueDate={task.dueDate} />
 
-      {onMenuClick && (
+      <div className="row-actions flex shrink-0 items-center gap-0.5">
         <button
           type="button"
           onClick={(e) => {
             e.stopPropagation();
-            onMenuClick();
+            dateRef.current?.showPicker();
           }}
-          className="shrink-0 rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-muted-foreground"
-          aria-label="More actions"
+          className="relative rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+          aria-label="Set due date"
         >
-          <MoreHorizontal className="h-4 w-4" />
+          <CalendarPlus className="h-4 w-4" />
+          <input
+            ref={dateRef}
+            type="date"
+            tabIndex={-1}
+            aria-hidden
+            className="pointer-events-none absolute inset-0 opacity-0"
+            defaultValue={task.dueDate?.slice(0, 10) ?? ""}
+            onChange={(e) =>
+              updateTask.mutate({ dueDate: e.target.value ? new Date(`${e.target.value}T12:00:00Z`) : null })
+            }
+          />
         </button>
-      )}
+        {onMenuClick && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onMenuClick();
+            }}
+            className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+            aria-label="More actions"
+          >
+            <MoreHorizontal className="h-4 w-4" />
+          </button>
+        )}
+      </div>
     </li>
   );
 }

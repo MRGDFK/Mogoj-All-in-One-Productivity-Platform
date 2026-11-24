@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import type {
   ApiResponse,
+  HQDashboard,
   Task,
   TaskQuery,
   CreateTaskInput,
@@ -15,6 +16,7 @@ import { isListQueryKey } from "@/lib/queryCache";
 
 const TASKS_KEY = ["tasks"] as const;
 const PROJECTS_KEY = ["projects"] as const;
+const DASHBOARD_KEY = ["dashboard"] as const;
 
 // Only the fields that are structurally identical between the write DTO and
 // the read model are safe to patch optimistically (Date -> ISO string still
@@ -64,6 +66,7 @@ function useInvalidateTasks() {
   return () => {
     queryClient.invalidateQueries({ queryKey: TASKS_KEY });
     queryClient.invalidateQueries({ queryKey: PROJECTS_KEY });
+    queryClient.invalidateQueries({ queryKey: DASHBOARD_KEY });
   };
 }
 
@@ -106,13 +109,21 @@ export function useUpdateTask(id: string) {
         (old) => old?.map((t) => (t.id === id ? { ...t, ...patch } : t)),
       );
 
-      return { previousTask, previousLists };
+      // HQ embeds tasks too: tick it there instantly, the settle refetch recounts
+      await queryClient.cancelQueries({ queryKey: DASHBOARD_KEY });
+      const previousDashboards = queryClient.getQueriesData<HQDashboard>({ queryKey: DASHBOARD_KEY });
+      const patchTask = (t: Task) => (t.id === id ? { ...t, ...patch } : t);
+      queryClient.setQueriesData<HQDashboard>({ queryKey: DASHBOARD_KEY }, (old) =>
+        old && { ...old, todayTasks: old.todayTasks.map(patchTask), upcomingTasks: old.upcomingTasks?.map(patchTask) ?? [] },
+      );
+
+      return { previousTask, previousLists, previousDashboards };
     },
     onError: (err, _input, context) => {
       if (context?.previousTask) {
         queryClient.setQueryData([...TASKS_KEY, id], context.previousTask);
       }
-      for (const [key, data] of context?.previousLists ?? []) {
+      for (const [key, data] of [...(context?.previousLists ?? []), ...(context?.previousDashboards ?? [])]) {
         queryClient.setQueryData(key, data);
       }
       toast.error(getApiErrorMessage(err) || "Failed to update task");

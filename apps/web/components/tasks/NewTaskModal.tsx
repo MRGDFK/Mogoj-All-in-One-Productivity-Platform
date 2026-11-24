@@ -28,9 +28,11 @@ interface NewTaskModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   defaultProjectId?: string;
+  /** yyyy-MM-dd */
+  defaultDueDate?: string;
 }
 
-export function NewTaskModal({ open, onOpenChange, defaultProjectId }: NewTaskModalProps) {
+export function NewTaskModal({ open, onOpenChange, defaultProjectId, defaultDueDate }: NewTaskModalProps) {
   const { data: projects } = useProjects({});
   const { data: areas } = useAreas({ status: "active" });
   const createTask = useCreateTask();
@@ -40,7 +42,7 @@ export function NewTaskModal({ open, onOpenChange, defaultProjectId }: NewTaskMo
   const [projectId, setProjectId] = useState(defaultProjectId ?? NO_PROJECT);
   const [priority, setPriority] = useState<Priority>("medium");
   const [status, setStatus] = useState<TaskStatus>("todo");
-  const [dueDate, setDueDate] = useState("");
+  const [dueDate, setDueDate] = useState(defaultDueDate ?? "");
   const [dueTime, setDueTime] = useState("");
   const [isRecurring, setIsRecurring] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -54,7 +56,7 @@ export function NewTaskModal({ open, onOpenChange, defaultProjectId }: NewTaskMo
     setProjectId(defaultProjectId ?? NO_PROJECT);
     setPriority("medium");
     setStatus("todo");
-    setDueDate("");
+    setDueDate(defaultDueDate ?? "");
     setDueTime("");
     setIsRecurring(false);
     setError(null);

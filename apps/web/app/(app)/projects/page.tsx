@@ -24,6 +24,7 @@ import { NewProjectModal } from "@/components/projects/NewProjectModal";
 import { KanbanBoard } from "@/components/projects/KanbanBoard";
 import { ProjectKanbanCardContent } from "@/components/projects/ProjectKanbanCardContent";
 import { PROJECT_COLUMN_VISUALS, PROJECT_KANBAN_COLUMNS } from "@/components/projects/kanbanColumns";
+import { useKanbanVisuals } from "@/hooks/useKanbanVisuals";
 
 type ViewMode = "kanban" | "list" | "card";
 
@@ -55,6 +56,7 @@ const STATUS_OPTIONS = [
 ];
 
 export default function ProjectsPage() {
+  const { visuals: columnVisuals, setColor: setColumnColor } = useKanbanVisuals("project", PROJECT_COLUMN_VISUALS);
   const openProjectDetail = useUIStore((s) => s.openProjectDetail);
   const [view, setView] = useState<ViewMode>("card");
   const [filters, setFilters] = useState<FilterState>({});
@@ -156,7 +158,8 @@ export default function ProjectsPage() {
             items={visibleProjects}
             isLoading={isLoading}
             statuses={PROJECT_KANBAN_COLUMNS}
-            visuals={PROJECT_COLUMN_VISUALS}
+            visuals={columnVisuals}
+            onColorChange={setColumnColor}
             getStatus={(project) => project.status}
             getPriority={(project) => project.priority}
             withStatus={(project, status, order) => ({ ...project, status, order })}

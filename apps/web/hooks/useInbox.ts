@@ -40,7 +40,10 @@ export function useUnprocessedInboxCount() {
 
 function useInvalidateInbox() {
   const queryClient = useQueryClient();
-  return () => queryClient.invalidateQueries({ queryKey: INBOX_KEY });
+  return () => {
+    queryClient.invalidateQueries({ queryKey: INBOX_KEY });
+    queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+  };
 }
 
 export function useCreateInboxItem() {

@@ -10,6 +10,7 @@ import {
   FolderKanban,
   FileText,
   Archive,
+  Compass,
   Settings,
   type LucideIcon,
 } from "lucide-react";
@@ -23,6 +24,7 @@ const NAV_ITEMS = [
   { href: "/", label: "HQ", icon: LayoutDashboard },
   { href: "/tasks", label: "Tasks", icon: ListTodo },
   { href: "/projects", label: "Projects", icon: FolderKanban },
+  { href: "/areas", label: "Areas", icon: Compass },
   { href: "/resources", label: "Resources", icon: FileText },
   { href: "/archive", label: "Archive", icon: Archive },
 ];
@@ -82,7 +84,7 @@ export function Sidebar() {
       </div>
 
       <nav className="flex-1 space-y-6 overflow-y-auto px-3 py-2">
-        <div className="space-y-0.5">
+        <div>
           <NavLink
             href="/inbox"
             active={pathname === "/inbox"}
@@ -104,7 +106,7 @@ export function Sidebar() {
 
         <div>
           <p className="px-3 pb-2 text-xs font-medium text-muted-foreground">Areas</p>
-          <div className="space-y-0.5">
+          <div>
             {areas?.map((area) => {
               const href = `/areas/${area.id}`;
               return (
@@ -118,12 +120,6 @@ export function Sidebar() {
                 </NavLink>
               );
             })}
-            <Link
-              href="/areas"
-              className="block rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors duration-(--dur-fast) hover:text-foreground"
-            >
-              View all areas
-            </Link>
           </div>
         </div>
       </nav>

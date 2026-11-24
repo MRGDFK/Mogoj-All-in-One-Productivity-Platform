@@ -296,7 +296,7 @@ export function IconPicker({ icon, color, onChange, triggerSize = 40, className,
 }
 
 /** Native color input; saves on the picker's final `change` event, not on every drag tick. */
-function CustomColorSwatch({ color, isCustom, onPick }: { color: string; isCustom: boolean; onPick: (c: string) => void }) {
+export function CustomColorSwatch({ color, isCustom, onPick }: { color: string; isCustom: boolean; onPick: (c: string) => void }) {
   const ref = useRef<HTMLInputElement>(null);
   const onPickRef = useRef(onPick);
   onPickRef.current = onPick;

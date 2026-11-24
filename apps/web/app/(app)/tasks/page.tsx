@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { use, useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Calendar, CircleDot, Columns3, Flag, FolderKanban, Layers, LayoutGrid, List, Plus } from "lucide-react";
 import type { Priority, Task, TaskQuery, TaskStatus } from "@mogoj/shared";
@@ -28,6 +28,7 @@ import { NewTaskModal } from "@/components/tasks/NewTaskModal";
 import { KanbanBoard } from "@/components/projects/KanbanBoard";
 import { TaskKanbanCardContent } from "@/components/projects/TaskKanbanCardContent";
 import { TASK_COLUMN_VISUALS, TASK_KANBAN_COLUMNS } from "@/components/projects/kanbanColumns";
+import { useKanbanVisuals } from "@/hooks/useKanbanVisuals";
 
 type ViewMode = "kanban" | "list" | "card";
 
@@ -58,9 +59,15 @@ const STATUS_OPTIONS = [
   { label: "Done", value: "done" },
 ];
 
-export default function TasksPage() {
+export default function TasksPage({ searchParams }: { searchParams: Promise<{ dueDate?: string; status?: string }> }) {
+  // HQ stat tiles deep-link here with a filter preset
+  const { dueDate: presetDueDate, status: presetStatus } = use(searchParams);
+  const { visuals: columnVisuals, setColor: setColumnColor } = useKanbanVisuals("task", TASK_COLUMN_VISUALS);
   const [view, setView] = useState<ViewMode>("list");
-  const [filters, setFilters] = useState<FilterState>({});
+  const [filters, setFilters] = useState<FilterState>(() => ({
+    ...(RELATIVE_DATE_OPTIONS.some((o) => o.value === presetDueDate) && { dueDate: presetDueDate }),
+    ...(STATUS_OPTIONS.some((o) => o.value === presetStatus) && { status: presetStatus }),
+  }));
   const [sort, setSort] = useState<SortValue>({ field: "dueDate", direction: "asc" });
   const [newTaskOpen, setNewTaskOpen] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
@@ -243,7 +250,8 @@ export default function TasksPage() {
             items={visibleTasks}
             isLoading={isLoading}
             statuses={TASK_KANBAN_COLUMNS}
-            visuals={TASK_COLUMN_VISUALS}
+            visuals={columnVisuals}
+            onColorChange={setColumnColor}
             getStatus={(task) => task.status}
             getPriority={(task) => task.priority}
             withStatus={(task, status, order) => ({ ...task, status, order })}
