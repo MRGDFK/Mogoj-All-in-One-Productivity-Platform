@@ -41,7 +41,7 @@ export function ProjectRow({ project, onDelete }: { project: Project; onDelete: 
           <Badge variant={STATUS_VARIANT[project.status]} className="capitalize">
             {project.status.replace("_", " ")}
           </Badge>
-          <PriorityBadge priority={project.priority} />
+          <PriorityBadge priority={project.priority} status={project.status} />
         </div>
       </td>
       <td className="py-1.5 pr-2">

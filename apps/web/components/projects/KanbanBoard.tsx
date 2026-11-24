@@ -1,12 +1,15 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { createPortal } from "react-dom";
+import type { Priority } from "@mogoj/shared";
 import { DndContext, DragOverlay } from "@dnd-kit/core";
 import { useBoardState, type BoardItem } from "@/hooks/useBoardState";
 import { Loader } from "@/components/shared/Loader";
 import { KanbanColumn } from "@/components/projects/KanbanColumn";
 import { KanbanCard } from "@/components/projects/KanbanCard";
 import { DragOverlayCard } from "@/components/projects/DragOverlayCard";
+import { shouldBreathe } from "@/lib/priorityBreath";
 import type { ColumnVisual } from "@/components/projects/kanbanColumns";
 
 interface KanbanBoardProps<T extends BoardItem, S extends string> {
@@ -18,6 +21,8 @@ interface KanbanBoardProps<T extends BoardItem, S extends string> {
   withStatus: (item: T, status: S, order: number) => T;
   onMove: (vars: { id: string; status: S; order: number }, revert: () => void) => void;
   renderContent: (item: T) => ReactNode;
+  /** Drives the colored strip above each card. */
+  getPriority?: (item: T) => Priority;
   onOpen?: (item: T) => void;
   onDelete?: (item: T) => void;
   emptyLabel: string;
@@ -33,6 +38,7 @@ export function KanbanBoard<T extends BoardItem, S extends string>({
   withStatus,
   onMove,
   renderContent,
+  getPriority,
   onOpen,
   onDelete,
   emptyLabel,
@@ -57,6 +63,8 @@ export function KanbanBoard<T extends BoardItem, S extends string>({
     return (
       <KanbanCard
         id={item.id}
+        priority={getPriority?.(item)}
+        breathing={getPriority ? shouldBreathe(getPriority(item), getStatus(item)) : false}
         onOpen={onOpen ? () => onOpen(item) : undefined}
         onDelete={onDelete ? () => onDelete(item) : undefined}
       >
@@ -88,9 +96,20 @@ export function KanbanBoard<T extends BoardItem, S extends string>({
           />
         ))}
       </div>
-      <DragOverlay dropAnimation={{ duration: 200, easing: "cubic-bezier(0.18, 0.67, 0.6, 1.22)" }}>
-        {activeItem ? <DragOverlayCard>{renderContent(activeItem)}</DragOverlayCard> : null}
-      </DragOverlay>
+      {/* Portaled to <body>: glass panels use backdrop-filter, which (like transform)
+          would become the containing block for the fixed-position overlay. */}
+      {typeof document !== "undefined" &&
+        createPortal(
+          <DragOverlay dropAnimation={{ duration: 240, easing: "cubic-bezier(0.22, 1, 0.36, 1)" }}>
+            {activeItem ? (
+              <DragOverlayCard
+                priority={getPriority?.(activeItem)}
+                breathing={getPriority ? shouldBreathe(getPriority(activeItem), getStatus(activeItem)) : false}
+              >{renderContent(activeItem)}</DragOverlayCard>
+            ) : null}
+          </DragOverlay>,
+          document.body,
+        )}
     </DndContext>
   );
 }

@@ -3,10 +3,10 @@ import { cn } from "@/lib/utils";
 import { getDeadlineDisplay } from "@/lib/deadline";
 
 const COLOR_CLASSES = {
-  red: "bg-red-50 text-red-700",
-  orange: "bg-orange-50 text-orange-700",
-  green: "bg-green-50 text-green-700",
-  gray: "bg-gray-100 text-gray-600",
+  red: "bg-red-500/10 text-red-300",
+  orange: "bg-orange-500/10 text-orange-300",
+  green: "bg-green-500/10 text-green-300",
+  gray: "bg-muted text-muted-foreground",
 } as const;
 
 export function DeadlineBadge({ dueDate }: { dueDate: string | null | undefined }) {

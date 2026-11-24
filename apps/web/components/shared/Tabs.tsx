@@ -1,11 +1,14 @@
 "use client";
 
-import { createContext, useContext } from "react";
+import { createContext, useContext, useId } from "react";
+import { m } from "motion/react";
 import { cn } from "@/lib/utils";
 
 interface TabsContextValue {
   value: string;
   onChange: (value: string) => void;
+  /** Shared layoutId so the active underline glides between triggers of this group */
+  indicatorId: string;
 }
 
 const TabsContext = createContext<TabsContextValue | null>(null);
@@ -24,8 +27,9 @@ interface TabsProps {
 }
 
 export function Tabs({ value, onValueChange, children, className }: TabsProps) {
+  const indicatorId = `tabs-indicator-${useId()}`;
   return (
-    <TabsContext.Provider value={{ value, onChange: onValueChange }}>
+    <TabsContext.Provider value={{ value, onChange: onValueChange, indicatorId }}>
       <div className={className}>{children}</div>
     </TabsContext.Provider>
   );
@@ -48,7 +52,7 @@ interface TabsTriggerProps {
 }
 
 export function TabsTrigger({ value, children, badge, className }: TabsTriggerProps) {
-  const { value: activeValue, onChange } = useTabsContext();
+  const { value: activeValue, onChange, indicatorId } = useTabsContext();
   const isActive = activeValue === value;
 
   return (
@@ -57,11 +61,18 @@ export function TabsTrigger({ value, children, badge, className }: TabsTriggerPr
       data-state={isActive ? "active" : "inactive"}
       onClick={() => onChange(value)}
       className={cn(
-        "rounded-none border-b-2 border-transparent bg-transparent px-4 py-2 text-sm font-medium text-muted-foreground transition-all hover:text-foreground",
-        "data-[state=active]:border-b-2 data-[state=active]:border-black data-[state=active]:bg-transparent data-[state=active]:font-semibold data-[state=active]:text-foreground data-[state=active]:shadow-none",
+        "relative bg-transparent px-4 py-2 text-sm font-medium text-muted-foreground transition-colors duration-(--dur-base) ease-soft hover:text-foreground",
+        "data-[state=active]:text-foreground",
         className,
       )}
     >
+      {isActive && (
+        <m.span
+          layoutId={indicatorId}
+          className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-foreground"
+          transition={{ type: "spring", bounce: 0, duration: 0.35 }}
+        />
+      )}
       <span className="flex items-center gap-1.5">
         {children}
         {badge !== undefined && badge > 0 && (

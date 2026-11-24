@@ -1,11 +1,12 @@
 "use client";
 
 import type { Task } from "@mogoj/shared";
-import { CheckCircle2, Circle, ListTodo } from "lucide-react";
+import { ListTodo } from "lucide-react";
 import { useUIStore } from "@/store/useUIStore";
 import { useUpdateTask } from "@/hooks/useTasks";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { PriorityBadge } from "@/components/shared/Badge";
+import { CompletionIcon } from "@/components/shared/CompletionIcon";
 import { cn, isOverdue } from "@/lib/utils";
 
 export function TodayTasks({ tasks }: { tasks: Task[] }) {
@@ -16,7 +17,7 @@ export function TodayTasks({ tasks }: { tasks: Task[] }) {
   }
 
   return (
-    <ul className="divide-y divide-border">
+    <ul className="-mx-2">
       {tasks.map((task) => (
         <TaskRow key={task.id} task={task} onClick={() => openTaskDetail(task.id)} />
       ))}
@@ -29,24 +30,20 @@ function TaskRow({ task, onClick }: { task: Task; onClick: () => void }) {
   const overdue = isOverdue(task.dueDate);
 
   return (
-    <li className="flex items-center gap-2 py-1.5">
+    <li className="flex items-center gap-2.5 rounded-lg px-2 py-2 transition-colors duration-(--dur-fast) hover:bg-white/[0.04]">
       <button
         type="button"
         onClick={(e) => {
           e.stopPropagation();
           updateTask.mutate({ status: task.status === "done" ? "todo" : "done" });
         }}
-        className="shrink-0 text-muted-foreground hover:text-primary"
+        className="shrink-0 text-muted-foreground transition-colors duration-(--dur-fast) hover:text-brand"
         aria-label="Toggle complete"
       >
-        {task.status === "done" ? (
-          <CheckCircle2 className="h-4.5 w-4.5 text-primary" />
-        ) : (
-          <Circle className="h-4.5 w-4.5" />
-        )}
+        <CompletionIcon done={task.status === "done"} className="h-4.5 w-4.5" />
       </button>
 
-      <button type="button" onClick={onClick} className="flex-1 text-left">
+      <button type="button" onClick={onClick} className="min-w-0 flex-1 text-left">
         <p className={cn("truncate text-sm", task.status === "done" && "text-muted-foreground line-through")}>
           {task.title}
         </p>
@@ -54,9 +51,9 @@ function TaskRow({ task, onClick }: { task: Task; onClick: () => void }) {
       </button>
 
       {overdue && task.status !== "done" && (
-        <span className="text-xs font-medium text-destructive">Overdue</span>
+        <span className="font-mono text-xs text-red-400">Overdue</span>
       )}
-      <PriorityBadge priority={task.priority} />
+      <span className="shrink-0"><PriorityBadge priority={task.priority} status={task.status} /></span>
     </li>
   );
 }

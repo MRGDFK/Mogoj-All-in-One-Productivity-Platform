@@ -17,10 +17,10 @@ export function TaskCard({ task, onClick, onMenuClick }: TaskCardProps) {
   const handleOpen = () => (onClick ? onClick() : openTaskDetail(task.id));
 
   return (
-    <div className="group relative rounded-lg border border-border/60 bg-white p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-all duration-150 hover:border-border hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)]">
+    <div className="surface-card spotlight group relative rounded-xl p-3 transition-[border-color] duration-(--dur-fast) hover:border-white/[0.14]">
       <div className="absolute right-2 top-2">
         <DropdownMenu.Root>
-          <DropdownMenu.Trigger className="rounded p-0.5 text-gray-400 opacity-0 transition-opacity hover:text-gray-600 group-hover:opacity-100">
+          <DropdownMenu.Trigger className="rounded p-0.5 text-muted-foreground opacity-0 transition-opacity hover:text-muted-foreground group-hover:opacity-100">
             <MoreHorizontal className="h-4 w-4" />
           </DropdownMenu.Trigger>
           <DropdownMenu.Portal>

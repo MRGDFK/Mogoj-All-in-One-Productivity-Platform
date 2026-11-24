@@ -1,6 +1,7 @@
 "use client";
 
 import { Inbox } from "lucide-react";
+import { AnimatePresence } from "motion/react";
 import { useInboxItems } from "@/hooks/useInbox";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Loader } from "@/components/shared/Loader";
@@ -23,9 +24,12 @@ export function InboxList({ status }: { status?: "captured" | "processed" }) {
 
   return (
     <ul className="space-y-3">
-      {items.map((item) => (
-        <InboxItemCard key={item.id} item={item} />
-      ))}
+      {/* Items stagger in on load; captured/processed items animate in and out */}
+      <AnimatePresence>
+        {items.map((item, i) => (
+          <InboxItemCard key={item.id} item={item} index={i} />
+        ))}
+      </AnimatePresence>
     </ul>
   );
 }

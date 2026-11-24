@@ -17,6 +17,8 @@ interface AnimatedViewSwitchProps {
  * will-change: transform) ancestor becomes the containing block for
  * position: fixed descendants, which breaks dnd-kit's DragOverlay
  * coordinates inside the Kanban panel.
+ * overflow-x-clip hides the off-screen panels horizontally only, without
+ * clipping vertically, so glows like .breathe-critical aren't cut off.
  */
 export function AnimatedViewSwitch({
   index,
@@ -24,7 +26,7 @@ export function AnimatedViewSwitch({
   className,
 }: AnimatedViewSwitchProps) {
   return (
-    <div className={cn("relative w-full overflow-hidden", className)}>
+    <div className={cn("relative w-full overflow-x-clip", className)}>
       <div
         className="flex w-[300%] items-start"
         style={{

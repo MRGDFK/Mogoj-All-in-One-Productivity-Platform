@@ -1,10 +1,11 @@
 "use client";
 
 import type { Task } from "@mogoj/shared";
-import { CheckCircle2, Circle, ListChecks } from "lucide-react";
+import { ListChecks } from "lucide-react";
 import { useUpdateTask } from "@/hooks/useTasks";
 import { useUIStore } from "@/store/useUIStore";
 import { PriorityBadge } from "@/components/shared/Badge";
+import { CompletionIcon } from "@/components/shared/CompletionIcon";
 import { cn, formatDate, isOverdue } from "@/lib/utils";
 
 export function TaskRow({ task }: { task: Task }) {
@@ -23,11 +24,7 @@ export function TaskRow({ task }: { task: Task }) {
         className="shrink-0 text-muted-foreground hover:text-primary"
         aria-label="Toggle complete"
       >
-        {task.status === "done" ? (
-          <CheckCircle2 className="h-4.5 w-4.5 text-primary" />
-        ) : (
-          <Circle className="h-4.5 w-4.5" />
-        )}
+        <CompletionIcon done={task.status === "done"} className="h-4.5 w-4.5" />
       </button>
 
       <button type="button" onClick={() => openTaskDetail(task.id)} className="min-w-0 flex-1 text-left">
@@ -56,7 +53,7 @@ export function TaskRow({ task }: { task: Task }) {
         </span>
       )}
 
-      <PriorityBadge priority={task.priority} />
+      <PriorityBadge priority={task.priority} status={task.status} />
     </li>
   );
 }

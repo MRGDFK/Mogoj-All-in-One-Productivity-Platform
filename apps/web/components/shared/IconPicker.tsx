@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Shuffle, Loader2, Upload as UploadIcon, Check, type LucideIcon } from "lucide-react";
 import { toast } from "sonner";
 import { usePresignUpload } from "@/hooks/useResources";
@@ -101,7 +101,7 @@ export function IconPicker({ icon, color, onChange, triggerSize = 40, className,
         <button
           type="button"
           className={cn(
-            "flex items-center justify-center rounded-lg border border-border/60 bg-white transition-colors hover:border-border",
+            "flex items-center justify-center rounded-xl border border-border bg-card transition-colors hover:border-border",
             className,
           )}
           style={{ width: triggerSize, height: triggerSize }}
@@ -160,7 +160,7 @@ export function IconPicker({ icon, color, onChange, triggerSize = 40, className,
             <Input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Filter..."
+              placeholder="Filter"
               className="h-8 text-xs"
             />
             <button
@@ -182,8 +182,8 @@ export function IconPicker({ icon, color, onChange, triggerSize = 40, className,
               {colorMenuOpen && (
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setColorMenuOpen(false)} />
-                  <div className="absolute right-0 top-[calc(100%+6px)] z-20 w-[184px] rounded-lg border border-border bg-popover p-2.5 shadow-lg">
-                    <div className="grid grid-cols-6 gap-2.5">
+                  <div className="glass-overlay absolute right-0 top-[calc(100%+6px)] z-20 w-max rounded-xl p-3 duration-150 ease-soft animate-in fade-in-0 zoom-in-[0.98] slide-in-from-top-1">
+                    <div className="grid grid-cols-8 gap-2">
                       {ICON_COLORS.map((c) => (
                         <button
                           key={c}
@@ -192,7 +192,7 @@ export function IconPicker({ icon, color, onChange, triggerSize = 40, className,
                             onChange({ color: c });
                             setColorMenuOpen(false);
                           }}
-                          className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-black/10 transition-transform hover:scale-110"
+                          className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-border transition-colors hover:border-foreground/40"
                           style={{ backgroundColor: c }}
                           aria-label={c}
                         >
@@ -200,6 +200,14 @@ export function IconPicker({ icon, color, onChange, triggerSize = 40, className,
                         </button>
                       ))}
                     </div>
+                    <CustomColorSwatch
+                      color={color}
+                      isCustom={!ICON_COLORS.includes(color)}
+                      onPick={(c) => {
+                        onChange({ color: c });
+                        setColorMenuOpen(false);
+                      }}
+                    />
                   </div>
                 </>
               )}
@@ -284,5 +292,33 @@ export function IconPicker({ icon, color, onChange, triggerSize = 40, className,
         )}
       </PopoverContent>
     </Popover>
+  );
+}
+
+/** Native color input; saves on the picker's final `change` event, not on every drag tick. */
+function CustomColorSwatch({ color, isCustom, onPick }: { color: string; isCustom: boolean; onPick: (c: string) => void }) {
+  const ref = useRef<HTMLInputElement>(null);
+  const onPickRef = useRef(onPick);
+  onPickRef.current = onPick;
+  useEffect(() => {
+    const input = ref.current;
+    if (!input) return;
+    const handle = () => onPickRef.current(input.value);
+    input.addEventListener("change", handle);
+    return () => input.removeEventListener("change", handle);
+  }, []);
+
+  return (
+    <label className="mt-3 flex cursor-pointer items-center gap-2 rounded-lg border-t border-border pt-3 text-xs text-muted-foreground transition-colors duration-(--dur-fast) hover:text-foreground">
+      <span
+        className="relative flex h-6 w-6 items-center justify-center rounded-full border border-border"
+        style={{ background: isCustom ? color : "conic-gradient(#f87171, #facc15, #4ade80, #22d3ee, #7c9cff, #e879f9, #f87171)" }}
+      >
+        {isCustom && <Check className="h-3.5 w-3.5 text-white drop-shadow" />}
+      </span>
+      Custom
+      {isCustom && <span className="ml-auto font-mono uppercase">{color}</span>}
+      <input ref={ref} type="color" defaultValue={color} className="sr-only" />
+    </label>
   );
 }

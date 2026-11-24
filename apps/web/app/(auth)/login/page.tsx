@@ -46,9 +46,9 @@ function LoginForm() {
   }
 
   return (
-    <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
+    <div className="glass rounded-2xl p-5 shadow-sm">
       <h1 className="text-lg font-semibold">Log in</h1>
-      <p className="mt-1 text-xs text-muted-foreground">Welcome back to your PARA workspace.</p>
+      <p className="mt-1 text-xs text-muted-foreground">Welcome back to your PARA workspace</p>
 
       <form onSubmit={handleSubmit} className="mt-4 space-y-3">
         <div className="space-y-1.5">

@@ -48,7 +48,7 @@ export function ProjectResources({ resources }: ProjectResourcesProps) {
             <div
               key={resource.id}
               onClick={() => openResourceDetail(resource.id)}
-              className="group relative flex cursor-pointer flex-col gap-2 rounded-lg border border-border bg-card p-3 transition-colors hover:border-border/80"
+              className="group relative flex cursor-pointer flex-col gap-2 glass rounded-2xl p-5 transition-colors hover:border-border/80"
             >
               <div className="flex items-start gap-2">
                 <EntityIcon
@@ -64,7 +64,7 @@ export function ProjectResources({ resources }: ProjectResourcesProps) {
                       href={url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="mt-1 flex items-center gap-1 text-xs text-blue-600 hover:underline"
+                      className="mt-1 flex items-center gap-1 text-xs text-blue-400 hover:underline"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <ExternalLink className="h-3 w-3 shrink-0" />

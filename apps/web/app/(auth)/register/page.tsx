@@ -38,7 +38,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
+    <div className="glass rounded-2xl p-5 shadow-sm">
       <h1 className="text-lg font-semibold">Create your account</h1>
       <p className="mt-1 text-xs text-muted-foreground">
         Set up your PARA workspace in a few seconds.
@@ -70,7 +70,7 @@ export default function RegisterPage() {
             onChange={(e) => setPassword(e.target.value)}
             required
           />
-          <p className="text-xs text-muted-foreground">At least 8 characters.</p>
+          <p className="text-xs text-muted-foreground">At least 8 characters</p>
         </div>
 
         {error && <p className="text-sm text-destructive">{error}</p>}

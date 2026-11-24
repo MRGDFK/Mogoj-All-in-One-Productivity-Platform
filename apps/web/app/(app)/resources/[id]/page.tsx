@@ -138,7 +138,7 @@ export default function ResourceDetailPage({ params }: { params: Promise<{ id: s
         />
       </div>
 
-      <div className="mb-4 divide-y divide-border/60 rounded-xl border border-border/60 bg-card">
+      <div className="mb-4 divide-y divide-border/60 glass rounded-2xl">
         <div className="flex items-center justify-between p-3">
           <span className="flex items-center gap-2 text-sm text-muted-foreground">
             <LinkIcon className="h-4 w-4" />
@@ -216,7 +216,7 @@ export default function ResourceDetailPage({ params }: { params: Promise<{ id: s
 
       <div className="mb-4 space-y-1.5">
         <div className="flex items-center justify-between">
-          <Label>Linked Notes</Label>
+          <Label>Linked notes</Label>
           <div className="flex gap-1">
             <button
               type="button"

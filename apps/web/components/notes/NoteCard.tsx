@@ -12,7 +12,7 @@ export function NoteCard({ note, onClick }: { note: Note; onClick: () => void })
     <button
       type="button"
       onClick={onClick}
-      className="flex flex-col gap-1.5 rounded-lg border border-border bg-card p-3 text-left transition-colors hover:border-border/80 hover:bg-accent/40"
+      className="surface-card spotlight flex flex-col gap-1.5 rounded-xl p-3 text-left transition-[translate,scale,border-color] duration-(--dur-fast) ease-soft hover:-translate-y-0.5 hover:border-white/[0.14] active:scale-[0.985]"
     >
       <p className="truncate text-sm font-medium">{note.title}</p>
       <p className="line-clamp-2 min-h-[2.5em] text-xs text-muted-foreground">

@@ -100,12 +100,12 @@ export function NewTaskModal({ open, onOpenChange, defaultProjectId }: NewTaskMo
     >
       <form onSubmit={handleCreate} className="space-y-4">
         {defaultProjectId && (
-          <div className="flex items-center gap-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-xs">
+          <div className="flex items-center gap-2 rounded-md border border-blue-500/20 bg-blue-500/10 px-3 py-2 text-xs">
             <EntityIcon icon={contextArea?.icon} color={contextArea?.color} size={14} />
-            <span className="text-slate-500">{contextArea?.name ?? "No area"}</span>
-            <ChevronRight className="h-3 w-3 text-slate-400" />
+            <span className="text-muted-foreground">{contextArea?.name ?? "No area"}</span>
+            <ChevronRight className="h-3 w-3 text-muted-foreground" />
             <EntityIcon icon={contextProject?.icon} color={contextProject?.color} size={14} fallback={FolderKanban} />
-            <span className="font-medium text-blue-600">{contextProject?.name ?? "Project"}</span>
+            <span className="font-medium text-blue-400">{contextProject?.name ?? "Project"}</span>
           </div>
         )}
 
@@ -198,7 +198,7 @@ export function NewTaskModal({ open, onOpenChange, defaultProjectId }: NewTaskMo
           </div>
         </div>
 
-        <div className="flex items-center gap-2 text-sm text-slate-600">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <input
             id="task-recurring"
             type="checkbox"
@@ -213,7 +213,7 @@ export function NewTaskModal({ open, onOpenChange, defaultProjectId }: NewTaskMo
 
         {error && <p className="text-sm text-destructive">{error}</p>}
 
-        <div className="flex justify-end gap-2 border-t border-slate-100 pt-4">
+        <div className="flex justify-end gap-2 border-t border-border pt-4">
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>

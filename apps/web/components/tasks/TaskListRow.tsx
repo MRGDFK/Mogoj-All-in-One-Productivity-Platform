@@ -2,8 +2,9 @@
 
 import { memo } from "react";
 import type { Task } from "@mogoj/shared";
-import { CheckCircle2, Circle, FolderKanban, MoreHorizontal } from "lucide-react";
+import { FolderKanban, MoreHorizontal } from "lucide-react";
 import { useUpdateTask } from "@/hooks/useTasks";
+import { CompletionIcon } from "@/components/shared/CompletionIcon";
 import { cn } from "@/lib/utils";
 import { PriorityBadge } from "@/components/tasks/PriorityBadge";
 import { DeadlineBadge } from "@/components/tasks/DeadlineBadge";
@@ -19,7 +20,7 @@ function TaskListRowImpl({ task, onClick, onMenuClick }: TaskListRowProps) {
   const updateTask = useUpdateTask(task.id);
 
   return (
-    <li className="flex items-center gap-2 border-b border-gray-100 py-2 px-3 transition-colors hover:bg-gray-50">
+    <li className="flex items-center gap-2 border-b border-border py-2 px-3 transition-colors hover:bg-accent">
       <button
         type="button"
         onClick={(e) => {
@@ -29,11 +30,7 @@ function TaskListRowImpl({ task, onClick, onMenuClick }: TaskListRowProps) {
         className="shrink-0 text-muted-foreground hover:text-primary"
         aria-label="Toggle complete"
       >
-        {task.status === "done" ? (
-          <CheckCircle2 className="h-4 w-4 text-primary" />
-        ) : (
-          <Circle className="h-4 w-4" />
-        )}
+        <CompletionIcon done={task.status === "done"} className="h-4 w-4" />
       </button>
 
       <button type="button" onClick={onClick} className="min-w-0 flex-1 text-left">
@@ -56,7 +53,7 @@ function TaskListRowImpl({ task, onClick, onMenuClick }: TaskListRowProps) {
         </span>
       )}
 
-      <PriorityBadge priority={task.priority} />
+      <PriorityBadge priority={task.priority} status={task.status} />
       <DeadlineBadge dueDate={task.dueDate} />
 
       {onMenuClick && (
@@ -66,7 +63,7 @@ function TaskListRowImpl({ task, onClick, onMenuClick }: TaskListRowProps) {
             e.stopPropagation();
             onMenuClick();
           }}
-          className="shrink-0 rounded-md p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+          className="shrink-0 rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-muted-foreground"
           aria-label="More actions"
         >
           <MoreHorizontal className="h-4 w-4" />

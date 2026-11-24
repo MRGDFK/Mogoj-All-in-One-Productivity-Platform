@@ -21,17 +21,17 @@ interface MetricCardProps {
 
 function MetricCard({ icon, label, value, sublabel, accent, progress }: MetricCardProps) {
   return (
-    <div className="flex items-center gap-3 rounded-lg border border-gray-100 bg-white px-3 py-2.5">
+    <div className="flex items-center gap-3 glass rounded-2xl px-3 py-2.5">
       <div className={cn("flex h-8 w-8 shrink-0 items-center justify-center rounded-md", accent)}>
         {icon}
       </div>
       <div className="min-w-0 flex-1">
         <p className="text-xs text-muted-foreground">{label}</p>
-        <p className="text-sm font-semibold text-gray-900">{value}</p>
+        <p className="text-sm font-semibold text-foreground">{value}</p>
         {progress !== undefined && (
           <div className="mt-1.5 flex items-center gap-2">
             <div className="h-1 flex-1 overflow-hidden rounded-full bg-muted">
-              <div className="h-full bg-emerald-500 transition-all" style={{ width: `${progress}%` }} />
+              <div className="h-full bg-emerald-500" style={{ width: `${progress}%` }} />
             </div>
             <span className="text-xs text-muted-foreground">{progress}% done</span>
           </div>
@@ -110,32 +110,32 @@ export function PortfolioMetricStrip({ projects }: PortfolioMetricStripProps) {
   return (
     <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
       <MetricCard
-        icon={<Target className="h-4 w-4 text-blue-600" />}
+        icon={<Target className="h-4 w-4 text-blue-400" />}
         label="Active Initiatives"
         value={`${activeCount}/${totalProjects}`}
         sublabel={`${activePercentage}% active rate`}
-        accent="bg-blue-50"
+        accent="bg-blue-500/10"
       />
       <MetricCard
-        icon={<CheckCircle2 className="h-4 w-4 text-emerald-600" />}
+        icon={<CheckCircle2 className="h-4 w-4 text-emerald-400" />}
         label="Task Completion"
         value={totalTasks > 0 ? `${completedTasks}/${totalTasks}` : "—"}
         progress={totalTasks > 0 ? completionRate : undefined}
-        accent="bg-emerald-50"
+        accent="bg-emerald-500/10"
       />
       <MetricCard
-        icon={<Folder className="h-4 w-4 text-indigo-600" />}
+        icon={<Folder className="h-4 w-4 text-indigo-400" />}
         label="Area Distribution"
         value={`${areaCount} Areas`}
         sublabel={topAreas || "no projects"}
-        accent="bg-indigo-50"
+        accent="bg-indigo-500/10"
       />
       <MetricCard
-        icon={<Clock className="h-4 w-4 text-amber-600" />}
+        icon={<Clock className="h-4 w-4 text-amber-400" />}
         label="Due Soon"
         value={dueSoonCount}
         sublabel={dueSoonCount > 0 ? "due within 7 days" : "no urgent deadlines"}
-        accent="bg-amber-50"
+        accent="bg-amber-500/10"
       />
     </div>
   );

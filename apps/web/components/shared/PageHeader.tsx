@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 
 interface PageHeaderProps {
-  title: string;
+  title: React.ReactNode;
   description?: string;
   icon?: React.ReactNode;
   actions?: React.ReactNode;
@@ -14,7 +14,7 @@ export function PageHeader({ title, description, icon, actions, className }: Pag
       <div className="flex items-center gap-3">
         {icon}
         <div className="space-y-0.5">
-          <h1 className="text-lg font-semibold tracking-tight">{title}</h1>
+          <h1 className="text-lg font-medium">{title}</h1>
           {description && <p className="text-xs text-muted-foreground">{description}</p>}
         </div>
       </div>

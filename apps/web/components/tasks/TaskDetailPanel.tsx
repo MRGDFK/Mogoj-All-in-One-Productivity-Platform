@@ -1,5 +1,6 @@
 "use client";
 
+import { breatheClass } from "@/lib/priorityBreath";
 import { useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { Calendar, FolderKanban, ListChecks, Trash2, X } from "lucide-react";
@@ -23,13 +24,6 @@ import { SubtaskList } from "@/components/tasks/SubtaskList";
 const PRIORITY_OPTIONS: Priority[] = ["low", "medium", "high", "critical"];
 const NO_PROJECT = "__none__";
 const NO_AREA = "__none__";
-const PRIORITY_TRIGGER_CLASSES: Record<Priority, string> = {
-  low: "border-green-200 text-green-700 bg-green-50/80 shadow-sm shadow-green-100",
-  medium: "border-amber-200 text-amber-700 bg-amber-50/80 shadow-sm shadow-amber-100",
-  high: "border-orange-200 text-orange-700 bg-orange-50/80 shadow-sm shadow-orange-100",
-  critical: "border-red-300 text-red-700 bg-red-50/80 font-extrabold shadow-sm shadow-red-100 animate-pulse",
-};
-
 export function TaskDetailPanel() {
   const taskDetailId = useUIStore((s) => s.taskDetailId);
   const closeTaskDetail = useUIStore((s) => s.closeTaskDetail);
@@ -100,17 +94,17 @@ function TaskDetailForm({
 
   return (
     <>
-      <div className="flex items-start justify-between gap-4 border-b border-slate-100 px-6 pb-4 pt-5">
+      <div className="flex items-start justify-between gap-4 border-b border-border px-6 pb-4 pt-5">
         <div className="min-w-0 flex-1">
           <Dialog.Title asChild>
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               onBlur={() => title.trim() && title !== task.title && updateTask.mutate({ title: title.trim() })}
-              className="w-full truncate border-none bg-transparent p-0 text-xl font-medium text-slate-900 outline-none"
+              className="w-full truncate border-none bg-transparent p-0 text-xl font-medium text-foreground outline-none"
             />
           </Dialog.Title>
-          <p className="mt-0.5 text-[11px] font-medium uppercase tracking-wide text-slate-400">
+          <p className="mt-0.5 text-xs text-muted-foreground">
             Task workspace
           </p>
         </div>
@@ -122,7 +116,7 @@ function TaskDetailForm({
               deleteTask.mutate(task.id);
               closeTaskDetail();
             }}
-            className="rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-red-600"
+            className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-red-400"
           >
             <Trash2 className="h-[18px] w-[18px]" />
           </button>
@@ -130,7 +124,7 @@ function TaskDetailForm({
             <button
               type="button"
               aria-label="Close"
-              className="rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+              className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-muted-foreground"
             >
               <X className="h-[18px] w-[18px]" />
             </button>
@@ -148,11 +142,11 @@ function TaskDetailForm({
       />
 
       <div className="flex-1 overflow-y-auto px-6 pb-6 pt-5">
-        <div className="grid grid-cols-2 gap-4 rounded-[10px] border border-slate-200 bg-slate-50 p-4">
+        <div className="grid grid-cols-2 gap-4 rounded-[10px] border border-border bg-muted p-4">
           <div className="flex flex-col gap-1.5">
-            <span className="text-[11px] font-medium uppercase tracking-wide text-slate-400">Status</span>
+            <span className="text-xs text-muted-foreground">Status</span>
             <Select value={task.status} onValueChange={(v) => updateTask.mutate({ status: v as never })}>
-              <SelectTrigger className="h-8 border-slate-200 bg-white px-2 text-sm font-medium">
+              <SelectTrigger className="h-8 border-border bg-card px-2 text-sm font-medium">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -185,12 +179,9 @@ function TaskDetailForm({
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <span className="text-[11px] font-medium uppercase tracking-wide text-slate-400">Priority</span>
+            <span className="text-xs text-muted-foreground">Priority</span>
             <Select value={task.priority} onValueChange={(v) => updateTask.mutate({ priority: v as never })}>
-              <SelectTrigger className={cn(
-                "h-8 px-2 text-sm font-medium",
-                PRIORITY_TRIGGER_CLASSES[task.priority],
-              )}>
+              <SelectTrigger className={cn("h-8 px-2 text-sm font-medium", breatheClass(task.priority, task.status))}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -207,9 +198,9 @@ function TaskDetailForm({
           </div>
 
           <div className="col-span-2 flex flex-col gap-1.5">
-            <span className="text-[11px] font-medium uppercase tracking-wide text-slate-400">Due date</span>
+            <span className="text-xs text-muted-foreground">Due date</span>
             <div className="flex items-center gap-2">
-              <Calendar className="h-3.5 w-3.5 text-slate-400" />
+              <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
               <input
                 type="date"
                 value={dueDate}
@@ -217,20 +208,20 @@ function TaskDetailForm({
                 onBlur={() => updateTask.mutate({ dueDate: dueDate ? new Date(`${dueDate}T12:00:00Z`) : null })}
                 className={cn(
                   "border-none bg-transparent p-0 text-sm font-medium outline-none",
-                  !dueDate && "text-slate-400",
+                  !dueDate && "text-muted-foreground",
                 )}
               />
             </div>
           </div>
 
           <div className="col-span-2 flex flex-col gap-1.5">
-            <span className="text-[11px] font-medium uppercase tracking-wide text-slate-400">Area</span>
+            <span className="text-xs text-muted-foreground">Area</span>
             <div className="flex items-center gap-2">
               <Select
                 value={task.areaId ?? NO_AREA}
                 onValueChange={(v) => updateTask.mutate({ areaId: v === NO_AREA ? null : v })}
               >
-                <SelectTrigger className="h-8 border-slate-200 bg-white px-2 text-sm font-medium">
+                <SelectTrigger className="h-8 border-border bg-card px-2 text-sm font-medium">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -249,13 +240,13 @@ function TaskDetailForm({
           </div>
 
           <div className="col-span-2 flex flex-col gap-1.5">
-            <span className="text-[11px] font-medium uppercase tracking-wide text-slate-400">Project</span>
+            <span className="text-xs text-muted-foreground">Project</span>
             <div className="flex items-center gap-2">
               <Select
                 value={task.projectId ?? NO_PROJECT}
                 onValueChange={(v) => updateTask.mutate({ projectId: v === NO_PROJECT ? null : v })}
               >
-                <SelectTrigger className="h-8 border-slate-200 bg-white px-2 text-sm font-medium">
+                <SelectTrigger className="h-8 border-border bg-card px-2 text-sm font-medium">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -275,22 +266,22 @@ function TaskDetailForm({
         </div>
 
         <div className="mt-5">
-          <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-slate-400">Description</p>
+          <p className="mb-2 text-xs text-muted-foreground">Description</p>
           <Textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             onBlur={() => updateTask.mutate({ description: description ? textToDoc(description) : null })}
             placeholder="No description"
-            className="min-h-[60px] rounded-[10px] border-slate-200 bg-slate-50 text-sm"
+            className="min-h-[60px] rounded-[10px] border-border bg-muted text-sm"
           />
         </div>
 
-        <div className="mt-5 border-t border-slate-100 pt-5">
+        <div className="mt-5 border-t border-border pt-5">
           <div className="mb-1 flex items-center gap-2">
-            <ListChecks className="h-4 w-4 text-slate-400" />
-            <span className="text-sm font-medium text-slate-900">Subtasks</span>
+            <ListChecks className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm font-medium text-foreground">Subtasks</span>
           </div>
-          <p className="mb-2.5 text-xs text-slate-400">Break work into smaller steps</p>
+          <p className="mb-2.5 text-xs text-muted-foreground">Break work into smaller steps</p>
           <SubtaskList parentTask={task} />
         </div>
       </div>

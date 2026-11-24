@@ -10,7 +10,7 @@ async function assertAreaOwnership(userId: string, areaId: string) {
   if (!area) throw ApiError.badRequest("Invalid areaId");
 }
 
-function withTaskCounts<T extends { tasks: { status: TaskStatus }[] }>(project: T) {
+export function withTaskCounts<T extends { tasks: { status: TaskStatus }[] }>(project: T) {
   const { tasks, ...rest } = project;
   return {
     ...rest,

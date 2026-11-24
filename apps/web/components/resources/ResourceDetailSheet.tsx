@@ -133,11 +133,12 @@ function ResourceDetailForm({ resource, updateResource, deleteResource, onClose 
       <div className="flex items-start justify-between gap-4 border-b border-border px-6 pb-4 pt-5">
         <div className="min-w-0 flex-1 space-y-1.5">
           <div className="flex items-center justify-between gap-2">
-            <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+            <span className="text-xs text-muted-foreground">
               Resource workspace
             </span>
             <Link
               href={`/resources/${resource.id}`}
+              onClick={onClose}
               className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
             >
               Open full page
@@ -242,7 +243,7 @@ function ResourceDetailForm({ resource, updateResource, deleteResource, onClose 
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <h4 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Linked Notes</h4>
+              <h4 className="text-xs font-medium text-muted-foreground">Linked notes</h4>
               <div className="flex gap-1">
                 <button
                   type="button"
@@ -309,13 +310,13 @@ function ResourceDetailForm({ resource, updateResource, deleteResource, onClose 
             </div>
           </div>
           <div className="space-y-1.5">
-            <h4 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Web Links</h4>
+            <h4 className="text-xs font-medium text-muted-foreground">Web links</h4>
             {resource.url ? (
               <a
                 href={resource.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1 rounded-lg border border-border p-3 text-xs text-blue-600 hover:underline"
+                className="flex items-center gap-1 rounded-lg border border-border p-3 text-xs text-blue-400 hover:underline"
               >
                 <ExternalLink className="h-3 w-3 shrink-0" />
                 <span className="truncate">{resource.url}</span>

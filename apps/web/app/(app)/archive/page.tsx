@@ -25,8 +25,8 @@ export default function ArchivePage() {
         <EmptyState icon={ArchiveIcon} title="Nothing archived yet" />
       ) : (
         <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-          <section className="rounded-lg border border-border bg-card p-3">
-            <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Areas</h2>
+          <section className="glass rounded-2xl p-5">
+            <h2 className="mb-2 text-xs font-medium text-muted-foreground">Areas</h2>
             {areas && areas.length > 0 ? (
               <ul className="space-y-2">
                 {areas.map((area) => (
@@ -45,8 +45,8 @@ export default function ArchivePage() {
             )}
           </section>
 
-          <section className="rounded-lg border border-border bg-card p-3">
-            <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Projects</h2>
+          <section className="glass rounded-2xl p-5">
+            <h2 className="mb-2 text-xs font-medium text-muted-foreground">Projects</h2>
             {projects && projects.length > 0 ? (
               <ul className="space-y-2">
                 {projects.map((project) => (

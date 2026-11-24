@@ -9,9 +9,11 @@ interface QuickAddInputProps {
   status: TaskStatus;
   onAdd: (title: string, status: TaskStatus) => void;
   disabled?: boolean;
+  /** Shown instead of "Add task" while disabled, to say why. */
+  disabledLabel?: string;
 }
 
-export function QuickAddInput({ status, onAdd, disabled }: QuickAddInputProps) {
+export function QuickAddInput({ status, onAdd, disabled, disabledLabel }: QuickAddInputProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [title, setTitle] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -53,11 +55,11 @@ export function QuickAddInput({ status, onAdd, disabled }: QuickAddInputProps) {
           onChange={(e) => setTitle(e.target.value)}
           onKeyDown={handleKeyDown}
           onBlur={handleCancel}
-          placeholder="Task title..."
+          placeholder="Task title"
           autoFocus
           className={cn(
-            "w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm shadow-sm",
-            "placeholder:text-muted-foreground focus:border-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-100",
+            "w-full rounded-xl border border-border bg-card px-3 py-2 text-sm shadow-sm",
+            "placeholder:text-muted-foreground focus:border-blue-500/30 focus:outline-none focus:ring-2 focus:ring-blue-500/20",
           )}
         />
       </div>
@@ -79,7 +81,7 @@ export function QuickAddInput({ status, onAdd, disabled }: QuickAddInputProps) {
       )}
     >
       <Plus className="h-3.5 w-3.5" />
-      Add task
+      {disabled && disabledLabel ? disabledLabel : "Add task"}
     </button>
   );
 }

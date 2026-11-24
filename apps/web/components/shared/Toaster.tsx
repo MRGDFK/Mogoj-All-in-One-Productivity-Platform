@@ -8,7 +8,7 @@ export function Toaster() {
       position="bottom-right"
       toastOptions={{
         classNames: {
-          toast: "!bg-card !text-card-foreground !border-border",
+          toast: "glass-overlay !bg-[rgb(24_27_34/0.76)] !text-card-foreground !border-border !rounded-xl",
         },
       }}
     />

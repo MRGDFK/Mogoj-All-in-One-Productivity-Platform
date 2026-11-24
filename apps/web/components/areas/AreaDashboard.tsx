@@ -17,8 +17,8 @@ export function AreaDashboard({ areaId }: { areaId: string }) {
 
   return (
     <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-      <section className="rounded-lg border border-border bg-card p-3 lg:col-span-2">
-        <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Projects</h2>
+      <section className="glass rounded-2xl p-5 lg:col-span-2">
+        <h2 className="mb-2 text-xs font-medium text-muted-foreground">Projects</h2>
         {data.projects.length === 0 ? (
           <EmptyState icon={FolderKanban} title="No projects in this area yet" />
         ) : (
@@ -42,8 +42,8 @@ export function AreaDashboard({ areaId }: { areaId: string }) {
         )}
       </section>
 
-      <section className="rounded-lg border border-border bg-card p-3">
-        <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Tasks</h2>
+      <section className="glass rounded-2xl p-5">
+        <h2 className="mb-2 text-xs font-medium text-muted-foreground">Tasks</h2>
         {data.tasks.length === 0 ? (
           <EmptyState icon={ListTodo} title="No direct tasks in this area" />
         ) : (
@@ -60,7 +60,7 @@ export function AreaDashboard({ areaId }: { areaId: string }) {
                       {task.project ? `Project: ${task.project.name}` : "Standalone"}
                     </p>
                   </div>
-                  <PriorityBadge priority={task.priority} />
+                  <PriorityBadge priority={task.priority} status={task.status} />
                 </button>
                 {task.subtasks && task.subtasks.length > 0 && (
                   <ul className="pb-1.5">
@@ -74,7 +74,7 @@ export function AreaDashboard({ areaId }: { areaId: string }) {
                             <span className="shrink-0 text-muted-foreground">⤷</span>
                             <p className="truncate text-sm text-muted-foreground">{subtask.title}</p>
                           </div>
-                          <PriorityBadge priority={subtask.priority} />
+                          <PriorityBadge priority={subtask.priority} status={subtask.status} />
                         </button>
                       </li>
                     ))}
@@ -86,8 +86,8 @@ export function AreaDashboard({ areaId }: { areaId: string }) {
         )}
       </section>
 
-      <section className="rounded-lg border border-border bg-card p-3">
-        <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Resources</h2>
+      <section className="glass rounded-2xl p-5">
+        <h2 className="mb-2 text-xs font-medium text-muted-foreground">Resources</h2>
         {data.resources.length === 0 ? (
           <EmptyState icon={FileText} title="No resources in this area" />
         ) : (

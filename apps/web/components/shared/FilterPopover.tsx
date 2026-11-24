@@ -44,7 +44,7 @@ export function FilterPopover({ fields, value, onChange }: FilterPopoverProps) {
           <ListFilter className="h-4 w-4" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[420px]">
+      <PopoverContent align="end" collisionPadding={16} className="w-[520px] max-w-[calc(100vw-32px)] p-3">
         <div className="space-y-2">
           {fields.map((field, index) => {
             const Icon = field.icon;
@@ -53,15 +53,15 @@ export function FilterPopover({ fields, value, onChange }: FilterPopoverProps) {
                 <span className="w-12 shrink-0 text-sm text-muted-foreground">
                   {index === 0 ? "Where" : "And"}
                 </span>
-                <div className="flex h-9 w-36 shrink-0 items-center gap-1.5 rounded-lg border border-input px-2 text-sm">
+                <div className="flex h-9 w-32 shrink-0 items-center gap-1.5 rounded-lg border border-input px-2 text-sm">
                   <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                   <span className="truncate">{field.label}</span>
                 </div>
-                <span className="w-32 shrink-0 text-sm text-muted-foreground">
+                <span className="w-24 shrink-0 text-sm text-muted-foreground">
                   {field.operatorLabel ?? "Is"}
                 </span>
                 <Select value={value[field.key] ?? "any"} onValueChange={(v) => setField(field.key, v)}>
-                  <SelectTrigger className="flex-1">
+                  <SelectTrigger className="min-w-0 flex-1 whitespace-nowrap">
                     <SelectValue placeholder={field.placeholder} />
                   </SelectTrigger>
                   <SelectContent>

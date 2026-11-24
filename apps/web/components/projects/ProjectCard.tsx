@@ -24,7 +24,7 @@ export function ProjectCard({ project }: { project: Project }) {
     <button
       type="button"
       onClick={() => openProjectDetail(project.id)}
-      className="flex w-full flex-col gap-2 rounded-lg border border-border bg-card p-3 text-left transition-colors hover:bg-accent"
+      className="surface-card spotlight flex w-full flex-col gap-2 rounded-xl p-3 text-left transition-[translate,scale,border-color] duration-(--dur-fast) ease-soft hover:-translate-y-0.5 hover:border-white/[0.14] active:scale-[0.985]"
     >
       <div className="flex items-center gap-2">
         <EntityIcon icon={project.icon} color={project.color} size={16} background fallback={FolderKanban} className="rounded-md" />
@@ -53,7 +53,7 @@ export function ProjectCard({ project }: { project: Project }) {
         <Badge variant={STATUS_VARIANT[project.status]} className="capitalize">
           {project.status.replace("_", " ")}
         </Badge>
-        <PriorityBadge priority={project.priority} />
+        <PriorityBadge priority={project.priority} status={project.status} />
         <DeadlineBadge dueDate={project.endDate} />
       </div>
     </button>

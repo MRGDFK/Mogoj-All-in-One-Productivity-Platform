@@ -1,103 +1,49 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
-import { Search, LogOut, Settings } from "lucide-react";
+import { ChevronDown, Search, LogOut, Settings } from "lucide-react";
 import { useAuthContext } from "@/providers/AuthProvider";
 import { useLogout } from "@/hooks/useAuth";
-import { useSearch } from "@/hooks/useSearch";
 import { Avatar } from "@/components/shared/Avatar";
-import { Input } from "@/components/shared/Input";
-import { cn } from "@/lib/utils";
+import { CommandPalette } from "@/components/layout/CommandPalette";
+
+const MENU_POP =
+  "duration-150 ease-soft data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-[0.98] data-[state=closed]:zoom-out-[0.98] data-[side=bottom]:slide-in-from-top-1";
 
 export function Header() {
   const { user } = useAuthContext();
   const logout = useLogout();
   const router = useRouter();
-
-  const [query, setQuery] = useState("");
-  const [open, setOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const { data: results } = useSearch(query);
-
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  const hasResults =
-    results &&
-    (results.tasks.length || results.projects.length || results.areas.length || results.resources.length);
+  const [paletteOpen, setPaletteOpen] = useState(false);
 
   return (
-    <header className="flex h-10 items-center justify-between gap-4 border-b border-border bg-card px-4">
-      <div ref={containerRef} className="relative w-full max-w-sm">
-        <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          value={query}
-          onChange={(e) => {
-            setQuery(e.target.value);
-            setOpen(true);
-          }}
-          onFocus={() => setOpen(true)}
-          placeholder="Search tasks, projects, areas, resources…"
-          className="pl-8"
-        />
-
-        {open && query.trim().length > 1 && (
-          <div className="absolute left-0 right-0 top-full z-40 mt-1 max-h-96 overflow-y-auto rounded-md border border-border bg-popover text-popover-foreground shadow-md">
-            {!hasResults && (
-              <p className="px-3 py-4 text-sm text-muted-foreground">No results found.</p>
-            )}
-            {results && (
-              <SearchGroup
-                label="Tasks"
-                items={results.tasks.map((t) => ({ id: t.id, label: t.title, href: `/tasks?taskId=${t.id}` }))}
-                onNavigate={() => setOpen(false)}
-              />
-            )}
-            {results && (
-              <SearchGroup
-                label="Projects"
-                items={results.projects.map((p) => ({ id: p.id, label: p.name, href: `/projects/${p.id}` }))}
-                onNavigate={() => setOpen(false)}
-              />
-            )}
-            {results && (
-              <SearchGroup
-                label="Areas"
-                items={results.areas.map((a) => ({ id: a.id, label: a.name, href: `/areas/${a.id}` }))}
-                onNavigate={() => setOpen(false)}
-              />
-            )}
-            {results && (
-              <SearchGroup
-                label="Resources"
-                items={results.resources.map((r) => ({ id: r.id, label: r.title, href: `/resources/${r.id}` }))}
-                onNavigate={() => setOpen(false)}
-              />
-            )}
-          </div>
-        )}
-      </div>
+    <header className="glass flex h-14 shrink-0 items-center justify-between gap-4 rounded-2xl px-3">
+      <button
+        type="button"
+        onClick={() => setPaletteOpen(true)}
+        className="flex h-9 w-full max-w-sm items-center gap-2.5 rounded-lg bg-white/[0.04] px-3 text-sm text-muted-foreground transition-colors duration-(--dur-fast) hover:bg-white/[0.07] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <Search className="h-4 w-4" strokeWidth={1.75} />
+        <span className="flex-1 text-left">Search</span>
+        <kbd className="rounded-md border border-border bg-white/[0.04] px-1.5 py-0.5 font-mono text-[11px]">⌘K</kbd>
+      </button>
+      <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
 
       {user && (
         <DropdownMenu.Root>
-          <DropdownMenu.Trigger className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          <DropdownMenu.Trigger className="flex items-center gap-2.5 rounded-xl py-1 pl-1 pr-2 transition-colors duration-(--dur-fast) hover:bg-white/[0.05] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
             <Avatar name={user.name} src={user.avatar} />
+            <span className="text-sm">{user.name}</span>
+            <ChevronDown className="h-4 w-4 text-muted-foreground" />
           </DropdownMenu.Trigger>
           <DropdownMenu.Portal>
             <DropdownMenu.Content
               align="end"
               sideOffset={8}
-              className="z-50 min-w-48 rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-md"
+              className={`glass-overlay z-50 min-w-52 rounded-xl p-1 text-popover-foreground ${MENU_POP}`}
             >
               <div className="px-2 py-1.5 text-sm">
                 <p className="font-medium">{user.name}</p>
@@ -107,7 +53,7 @@ export function Header() {
               <DropdownMenu.Item asChild>
                 <Link
                   href="/settings"
-                  className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground"
+                  className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm outline-none data-[highlighted]:bg-accent"
                 >
                   <Settings className="h-4 w-4" />
                   Settings
@@ -117,7 +63,7 @@ export function Header() {
                 onSelect={() => {
                   logout.mutate(undefined, { onSuccess: () => router.push("/login") });
                 }}
-                className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-destructive outline-none hover:bg-accent"
+                className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-destructive outline-none data-[highlighted]:bg-accent"
               >
                 <LogOut className="h-4 w-4" />
                 Log out
@@ -127,36 +73,5 @@ export function Header() {
         </DropdownMenu.Root>
       )}
     </header>
-  );
-}
-
-function SearchGroup({
-  label,
-  items,
-  onNavigate,
-}: {
-  label: string;
-  items: { id: string; label: string; href: string }[];
-  onNavigate: () => void;
-}) {
-  if (items.length === 0) return null;
-  return (
-    <div className="border-b border-border py-1 last:border-b-0">
-      <p className="px-3 py-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        {label}
-      </p>
-      {items.map((item) => (
-        <Link
-          key={item.id}
-          href={item.href}
-          onClick={onNavigate}
-          className={cn(
-            "block truncate px-3 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground",
-          )}
-        >
-          {item.label}
-        </Link>
-      ))}
-    </div>
   );
 }

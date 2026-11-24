@@ -158,6 +158,7 @@ export default function ProjectsPage() {
             statuses={PROJECT_KANBAN_COLUMNS}
             visuals={PROJECT_COLUMN_VISUALS}
             getStatus={(project) => project.status}
+            getPriority={(project) => project.priority}
             withStatus={(project, status, order) => ({ ...project, status, order })}
             onMove={handleMove}
             renderContent={(project) => <ProjectKanbanCardContent project={project} />}

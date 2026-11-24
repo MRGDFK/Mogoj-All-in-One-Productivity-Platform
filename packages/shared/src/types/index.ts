@@ -102,6 +102,8 @@ export interface Task {
   workLogs?: WorkLog[];
   project?: Pick<Project, "id" | "name" | "color" | "icon">;
   area?: Pick<Area, "id" | "name" | "color" | "icon">;
+  /** Present on list responses; feeds the Kanban card footer. */
+  _count?: { resources: number };
 }
 
 export interface WorkLog {
@@ -191,4 +193,7 @@ export interface HQDashboard {
   recentResources: Resource[];
   recentActivity: ActivityLogEntry[];
   inboxUnprocessedCount: number;
+  activeProjectCount: number;
+  /** Tasks created vs completed per week, oldest first; last entry is the current week. */
+  weeklyThroughput: { weekStart: string; created: number; completed: number }[];
 }

@@ -44,6 +44,7 @@ export async function listTasks(userId: string, query: TaskQuery) {
     orderBy: [{ status: "asc" }, { order: "asc" }],
     include: {
       subtasks: { orderBy: { order: "asc" } },
+      _count: { select: { resources: true } },
       project: { select: { id: true, name: true, color: true, icon: true } },
       area: { select: { id: true, name: true, color: true, icon: true } },
     },

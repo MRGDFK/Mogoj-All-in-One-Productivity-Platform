@@ -28,7 +28,7 @@ export function NewProjectModal({ open, onOpenChange, lockedAreaId }: NewProject
 
   const [name, setName] = useState("");
   const [areaId, setAreaId] = useState("");
-  const [icon, setIcon] = useState("rocket");
+  const [icon, setIcon] = useState("Rocket");
   const [color, setColor] = useState<string>(ICON_COLORS[0]!);
   const [error, setError] = useState<string | null>(null);
 
@@ -51,7 +51,7 @@ export function NewProjectModal({ open, onOpenChange, lockedAreaId }: NewProject
       await createProject.mutateAsync(parsed.data);
       setName("");
       setAreaId("");
-      setIcon("rocket");
+      setIcon("Rocket");
       setColor(ICON_COLORS[0]!);
       onOpenChange(false);
     } catch (err) {

@@ -8,20 +8,18 @@ export const PRIORITY_LABELS: Record<Priority, string> = {
 };
 
 export const PRIORITY_COLORS: Record<Priority, string> = {
-  low: "text-green-600",
-  medium: "text-yellow-600",
-  high: "text-orange-600",
-  critical: "text-red-600",
+  low: "text-green-400",
+  medium: "text-yellow-400",
+  high: "text-orange-400",
+  critical: "text-red-400",
 };
 
-// Shared pill background/text styling for priority badges. Critical pulses
-// everywhere it appears, not just in specific views, so it reads as urgent
-// wherever a task or project surfaces.
+// Pills stay neutral; the PriorityIcon fill carries the level. Only critical gets a toned red.
 export const PRIORITY_PILL_CLASSES: Record<Priority, string> = {
-  low: "bg-green-50 text-green-700",
-  medium: "bg-yellow-50 text-yellow-700",
-  high: "bg-orange-50 text-orange-700",
-  critical: "bg-red-50 text-red-700 animate-pulse",
+  low: "bg-secondary text-muted-foreground",
+  medium: "bg-secondary text-muted-foreground",
+  high: "bg-secondary text-muted-foreground",
+  critical: "bg-red-500/10 text-red-300",
 };
 
 const FILL_COLORS: Record<Priority, string> = {

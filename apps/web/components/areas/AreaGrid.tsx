@@ -1,6 +1,8 @@
 "use client";
 
 import { Compass } from "lucide-react";
+import { m } from "motion/react";
+import { staggerIn } from "@/lib/motion";
 import { useAreas } from "@/hooks/useAreas";
 import { Loader } from "@/components/shared/Loader";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -23,8 +25,10 @@ export function AreaGrid() {
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {areas.map((area) => (
-        <AreaCard key={area.id} area={area} />
+      {areas.map((area, i) => (
+        <m.div key={area.id} {...staggerIn(i)}>
+          <AreaCard area={area} />
+        </m.div>
       ))}
     </div>
   );

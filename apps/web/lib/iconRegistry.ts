@@ -545,17 +545,4 @@ export const EMOJI_LIBRARY: EmojiEntry[] = [  { emoji: "🚀", keywords: "rocket
   { emoji: "🏢", keywords: "building office" },
 ];
 
-export const ICON_COLORS = [
-  "#525252",
-  "#7c4a2d",
-  "#b45309",
-  "#ca8a04",
-  "#4d7c0f",
-  "#15803d",
-  "#0d9488",
-  "#0369a1",
-  "#4338ca",
-  "#7e22ce",
-  "#be185d",
-  "#dc2626",
-];
+export { ICON_COLORS } from "@/lib/colors";

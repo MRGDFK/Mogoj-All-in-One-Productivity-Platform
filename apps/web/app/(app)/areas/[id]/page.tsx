@@ -8,6 +8,8 @@ import { useArea, useDeleteArea, useUpdateArea } from "@/hooks/useAreas";
 import { useCreateTask } from "@/hooks/useTasks";
 import { getApiErrorMessage } from "@/lib/api";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { EditableTitle } from "@/components/shared/EditableTitle";
+import { NAME_MAX } from "@/lib/entityName";
 import { Button } from "@/components/shared/Button";
 import { Loader } from "@/components/shared/Loader";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
@@ -48,7 +50,15 @@ export default function AreaDetailPage({ params }: { params: Promise<{ id: strin
   return (
     <div>
       <PageHeader
-        title={area.name}
+        title={
+          <EditableTitle
+            key={`${area.id}:${area.name}`}
+            name={area.name}
+            maxLength={NAME_MAX.area}
+            label="Area name"
+            onRename={(name) => updateArea.mutate({ name })}
+          />
+        }
         description={area.description ?? undefined}
         icon={
           <IconPicker

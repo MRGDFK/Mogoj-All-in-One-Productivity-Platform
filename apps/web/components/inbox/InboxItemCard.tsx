@@ -1,5 +1,6 @@
 "use client";
 
+import { m } from "motion/react";
 import type { InboxItem } from "@mogoj/shared";
 import { Trash2, Check } from "lucide-react";
 import { useDeleteInboxItem } from "@/hooks/useInbox";
@@ -9,13 +10,20 @@ import { Button } from "@/components/shared/Button";
 import { docToText } from "@/lib/tiptap";
 import { formatRelativeTime } from "@/lib/utils";
 
-export function InboxItemCard({ item }: { item: InboxItem }) {
+export function InboxItemCard({ item, index = 0 }: { item: InboxItem; index?: number }) {
   const deleteItem = useDeleteInboxItem();
   const openProcessModal = useUIStore((s) => s.openProcessModal);
   const bodyText = docToText(item.body);
 
   return (
-    <li className="flex items-start justify-between gap-4 rounded-lg border border-border bg-card p-4">
+    <m.li
+      layout
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, x: 24, transition: { duration: 0.2 } }}
+      transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1], delay: Math.min(index, 12) * 0.025 }}
+      className="surface-card flex items-start justify-between gap-4 rounded-xl p-4"
+    >
       <div className="min-w-0">
         <div className="mb-1 flex items-center gap-2">
           <Badge variant="outline" className="capitalize">
@@ -47,6 +55,6 @@ export function InboxItemCard({ item }: { item: InboxItem }) {
           Processed
         </Badge>
       )}
-    </li>
+    </m.li>
   );
 }

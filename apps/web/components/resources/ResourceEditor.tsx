@@ -12,28 +12,12 @@ import { Bold, Italic, List, ListOrdered, Heading2, Quote, Palette, Highlighter 
 import type { TipTapDocument } from "@mogoj/shared";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/shared/Popover";
 import { cn } from "@/lib/utils";
+import { HIGHLIGHT_COLORS, TEXT_COLORS } from "@/lib/colors";
 
 interface ResourceEditorProps {
   content: TipTapDocument | null;
   onChange: (doc: TipTapDocument) => void;
 }
-
-const TEXT_COLORS = [
-  { label: "Black", value: "#18181b" },
-  { label: "Gray", value: "#71717a" },
-  { label: "Red", value: "#ef4444" },
-  { label: "Blue", value: "#3b82f6" },
-  { label: "Green", value: "#22c55e" },
-  { label: "Orange", value: "#f97316" },
-  { label: "Purple", value: "#a855f7" },
-];
-
-const HIGHLIGHT_COLORS = [
-  { label: "Yellow", value: "#fef08a" },
-  { label: "Green", value: "#bbf7d0" },
-  { label: "Pink", value: "#fbcfe8" },
-  { label: "Blue", value: "#bfdbfe" },
-];
 
 export function ResourceEditor({ content, onChange }: ResourceEditorProps) {
   const editor = useEditor({
@@ -53,7 +37,7 @@ export function ResourceEditor({ content, onChange }: ResourceEditorProps) {
     },
     editorProps: {
       attributes: {
-        class: "prose prose-sm max-w-none min-h-64 text-foreground focus:outline-none",
+        class: "prose prose-sm prose-invert max-w-none min-h-64 text-foreground focus:outline-none",
       },
     },
   });
@@ -61,7 +45,7 @@ export function ResourceEditor({ content, onChange }: ResourceEditorProps) {
   if (!editor) return null;
 
   return (
-    <div className="rounded-lg border border-border bg-card">
+    <div className="glass rounded-2xl">
       <div className="flex items-center gap-1 border-b border-border p-2">
         <ToolbarButton active={editor.isActive("bold")} onClick={() => editor.chain().focus().toggleBold().run()}>
           <Bold className="h-4 w-4" />
@@ -107,7 +91,7 @@ export function ResourceEditor({ content, onChange }: ResourceEditorProps) {
               <button
                 type="button"
                 onClick={() => editor.chain().focus().unsetColor().run()}
-                className="flex h-5 w-5 items-center justify-center rounded-full border border-border text-[9px] text-muted-foreground hover:scale-110"
+                className="flex h-5 w-5 items-center justify-center rounded-full border border-border text-[9px] text-muted-foreground transition-colors hover:border-foreground/40"
                 aria-label="Default color"
               >
                 ×
@@ -117,7 +101,7 @@ export function ResourceEditor({ content, onChange }: ResourceEditorProps) {
                   key={c.value}
                   type="button"
                   onClick={() => editor.chain().focus().setColor(c.value).run()}
-                  className="h-5 w-5 rounded-full border border-border/60 transition-transform hover:scale-110"
+                  className="h-5 w-5 rounded-full border border-border/60 transition-colors hover:border-foreground/40"
                   style={{ backgroundColor: c.value }}
                   aria-label={c.label}
                 />
@@ -137,7 +121,7 @@ export function ResourceEditor({ content, onChange }: ResourceEditorProps) {
               <button
                 type="button"
                 onClick={() => editor.chain().focus().unsetHighlight().run()}
-                className="flex h-5 w-5 items-center justify-center rounded-full border border-border text-[9px] text-muted-foreground hover:scale-110"
+                className="flex h-5 w-5 items-center justify-center rounded-full border border-border text-[9px] text-muted-foreground transition-colors hover:border-foreground/40"
                 aria-label="No highlight"
               >
                 ×
@@ -147,7 +131,7 @@ export function ResourceEditor({ content, onChange }: ResourceEditorProps) {
                   key={c.value}
                   type="button"
                   onClick={() => editor.chain().focus().setHighlight({ color: c.value }).run()}
-                  className="h-5 w-5 rounded-full border border-border/60 transition-transform hover:scale-110"
+                  className="h-5 w-5 rounded-full border border-border/60 transition-colors hover:border-foreground/40"
                   style={{ backgroundColor: c.value }}
                   aria-label={c.label}
                 />

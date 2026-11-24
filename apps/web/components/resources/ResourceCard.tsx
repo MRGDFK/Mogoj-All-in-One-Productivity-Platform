@@ -13,7 +13,7 @@ export function ResourceCard({ resource }: { resource: Resource }) {
     <button
       type="button"
       onClick={() => openResourceDetail(resource.id)}
-      className="flex w-full flex-col gap-2 rounded-lg border border-border bg-card p-4 text-left transition-colors hover:bg-accent"
+      className="surface-card spotlight flex w-full flex-col gap-2 rounded-xl p-4 text-left transition-[translate,scale,border-color] duration-(--dur-fast) ease-soft hover:-translate-y-0.5 hover:border-white/[0.14] active:scale-[0.985]"
     >
       <div className="flex items-center gap-2">
         <EntityIcon icon={resource.icon} size={16} fallback={RESOURCE_TYPE_ICONS[resource.type]} />
@@ -25,7 +25,7 @@ export function ResourceCard({ resource }: { resource: Resource }) {
           target="_blank"
           rel="noopener noreferrer"
           onClick={(e) => e.stopPropagation()}
-          className="flex items-center gap-1 text-xs text-blue-600 hover:underline"
+          className="flex items-center gap-1 text-xs text-blue-400 hover:underline"
         >
           <ExternalLink className="h-3 w-3 shrink-0" />
           <span className="truncate">{resource.url}</span>

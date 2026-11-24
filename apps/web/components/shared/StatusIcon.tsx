@@ -8,7 +8,7 @@ export const STATUS_LABELS: Record<TaskStatus, string> = {
 };
 
 const STATUS_COLORS: Record<TaskStatus, string> = {
-  todo: "text-slate-400",
+  todo: "text-muted-foreground",
   in_progress: "text-blue-500",
   in_review: "text-orange-500",
   done: "text-green-500",

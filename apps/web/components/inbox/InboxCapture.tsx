@@ -40,7 +40,7 @@ export function InboxCapture() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex flex-col gap-2 rounded-lg border border-border bg-card p-4 sm:flex-row sm:items-start"
+      className="flex flex-col gap-2 glass rounded-2xl p-5 sm:flex-row sm:items-start"
     >
       <div className="flex-1 space-y-2">
         <Input

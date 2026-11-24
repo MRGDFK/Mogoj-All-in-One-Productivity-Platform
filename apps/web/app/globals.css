@@ -4,61 +4,54 @@
 
 html {
   font-size: 14px;
-}
-
-:root {
-  --background: #fafafa;
-  --foreground: #18181b;
-  --card: #ffffff;
-  --card-foreground: #18181b;
-  --popover: #ffffff;
-  --popover-foreground: #18181b;
-  --primary: #000000;
-  --primary-foreground: #ffffff;
-  --secondary: #f4f4f5;
-  --secondary-foreground: #18181b;
-  --muted: #f4f4f5;
-  --muted-foreground: #71717a;
-  --accent: #f4f4f5;
-  --accent-foreground: #18181b;
-  --destructive: #ef4444;
-  --destructive-foreground: #ffffff;
-  --border: #e4e4e7;
-  --input: #e4e4e7;
-  --ring: #000000;
-  --radius: 0.625rem;
+  color-scheme: dark;
 }
 
 /*
- * Dark mode disabled for this phase.
- * Re-enable by installing next-themes and adding a ThemeProvider
- * that toggles the `.dark` class on <html>.
+ * Dark-only "frosted graphite" theme. Surfaces stay neutral; color lives in
+ * content (priority strips, chart, accent). Glass = translucent neutral + blur
+ * + a 1px top highlight, applied only to chrome and panels via `glass`.
  */
-.dark {
-  :root {
-    --background: #0a0a0b;
-    --foreground: #fafafa;
-    --card: #18181b;
-    --card-foreground: #fafafa;
-    --popover: #18181b;
-    --popover-foreground: #fafafa;
-    --primary: #000000;
-    --primary-foreground: #ffffff;
-    --secondary: #27272a;
-    --secondary-foreground: #fafafa;
-    --muted: #27272a;
-    --muted-foreground: #a1a1aa;
-    --accent: #27272a;
-    --accent-foreground: #fafafa;
-    --destructive: #f87171;
-    --destructive-foreground: #18181b;
-    --border: #27272a;
-    --input: #27272a;
-    --ring: #000000;
-  }
+:root {
+  --background: #0a0b0e;
+  --foreground: #ececef;
+  --card: rgb(255 255 255 / 0.04);
+  --card-foreground: #ececef;
+  --popover: rgb(22 24 30 / 0.92);
+  --popover-foreground: #ececef;
+  /* Off-white primary button with dark text; the blue accent is used sparingly */
+  --primary: #ececef;
+  --primary-foreground: #0a0b0e;
+  --secondary: rgb(255 255 255 / 0.06);
+  --secondary-foreground: #ececef;
+  --muted: rgb(255 255 255 / 0.05);
+  --muted-foreground: #8b8f99;
+  --accent: rgb(255 255 255 / 0.07);
+  --accent-foreground: #ececef;
+  --destructive: #e5484d;
+  --destructive-foreground: #ffffff;
+  --border: rgb(255 255 255 / 0.08);
+  --input: rgb(255 255 255 / 0.1);
+  --ring: #7c9cff;
+  --brand: #7c9cff;
+  --radius: 0.625rem;
+
+  /* Priority hues, tuned for dark surfaces */
+  --prio-low: #3fb27f;
+  --prio-medium: #d9a13b;
+  --prio-high: #ec7a3c;
+  --prio-critical: #e5484d;
+
+  /* Motion: one curve, three durations */
+  --ease-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur-fast: 120ms;
+  --dur-base: 200ms;
+  --dur-slow: 320ms;
 }
 
 @theme inline {
+  /* html is 14px, so rem-based spacing would land on 3.5px steps */
+  --spacing: 4px;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -78,18 +71,196 @@ html {
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-brand: var(--brand);
+  --color-prio-low: var(--prio-low);
+  --color-prio-medium: var(--prio-medium);
+  --color-prio-high: var(--prio-high);
+  --color-prio-critical: var(--prio-critical);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
-  --font-sans: var(--font-inter);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --font-sans: var(--font-geist);
+  --font-mono: var(--font-geist-mono);
+  --ease-soft: var(--ease-soft);
+}
+
+/* Frosted panel: chrome, section panels, modals. Not for repeated cards (blur cost). */
+@utility glass {
+  background-color: rgb(20 22 27 / 0.58);
+  backdrop-filter: blur(18px) saturate(145%);
+  -webkit-backdrop-filter: blur(18px) saturate(145%);
+  border: 1px solid rgb(255 255 255 / 0.08);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.09),
+    0 8px 32px rgb(0 0 0 / 0.35);
+}
+
+/* Denser glass for things that float over content: modals, sheets, menus, toasts */
+@utility glass-overlay {
+  background-color: rgb(24 27 34 / 0.76);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  border: 1px solid rgb(255 255 255 / 0.08);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.09),
+    0 24px 64px rgb(0 0 0 / 0.5);
+}
+
+/* Repeated cards: machined graphite sitting on the frosted glass. No blur (perf). */
+@utility surface-card {
+  background-color: rgb(255 255 255 / 0.035);
+  border: 1px solid rgb(255 255 255 / 0.07);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.05);
+}
+
+/*
+ * Critical items "breathe": the whole tag fades in and out (the original
+ * animate-pulse feel) while a red glow swells with it. The glow lives on
+ * ::after, so it inherits the tag's fade and the two move as one breath.
+ */
+.breathe-critical,
+.breathe-critical-strip {
+  position: relative;
+  isolation: isolate;
+}
+.breathe-critical {
+  animation: breathe-critical-fade 2.6s ease-in-out infinite;
+}
+.breathe-critical::after,
+.breathe-critical-strip::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow:
+    0 0 0 1px rgb(229 72 77 / 0.7),
+    0 0 14px 2px rgb(229 72 77 / 0.55);
+  animation: breathe-critical-glow 2.6s ease-in-out infinite;
+}
+/* Kanban: only the strip label fades, so the card's own text stays readable */
+.breathe-critical-strip .prio-strip-label {
+  animation: breathe-critical-fade 2.6s ease-in-out infinite;
+}
+@keyframes breathe-critical-fade {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+@keyframes breathe-critical-glow {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+/* Rich text on the dark theme: Typography's inverted palette, links in the brand accent */
+.prose-invert {
+  --tw-prose-invert-links: var(--brand);
 }
 
 body {
-  background: var(--color-background);
+  background-color: var(--color-background);
   color: var(--color-foreground);
+}
+
+/* The one ambient light behind the glass, so frosted panels have something to frost */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(60rem 40rem at 12% -8%, rgb(124 156 255 / 0.09), transparent 70%),
+    radial-gradient(48rem 36rem at 70% 40%, rgb(100 116 139 / 0.07), transparent 70%),
+    radial-gradient(50rem 36rem at 100% 108%, rgb(124 156 255 / 0.06), transparent 70%);
+}
+
+/* Ultra-fine grain over the ambient light so blurred glass has texture to frost */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+}
+
+/* Browsers without backdrop-filter get solid graphite instead of see-through panels */
+@supports not (backdrop-filter: blur(1px)) {
+  .glass {
+    background-color: #15171c;
+  }
+  .glass-overlay {
+    background-color: #1a1d24;
+  }
+}
+
+/*
+ * Cursor spotlight: --mx/--my are written by MotionProvider's single pointermove
+ * listener (no React re-renders). ::before = surface sheen, ::after = border glint.
+ */
+.spotlight {
+  position: relative;
+}
+.spotlight::before,
+.spotlight::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--dur-base) var(--ease-soft);
+}
+.spotlight::before {
+  background: radial-gradient(260px circle at var(--mx, 50%) var(--my, 50%), rgb(124 156 255 / 0.09), transparent 65%);
+}
+.spotlight::after {
+  padding: 1px;
+  background: radial-gradient(200px circle at var(--mx, 50%) var(--my, 50%), rgb(255 255 255 / 0.16), transparent 60%);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+.spotlight:hover::before,
+.spotlight:hover::after {
+  opacity: 1;
 }
 
 * {
   border-color: var(--color-border);
+}
+
+::selection {
+  background: rgb(124 156 255 / 0.3);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(255 255 255 / 0.12) transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

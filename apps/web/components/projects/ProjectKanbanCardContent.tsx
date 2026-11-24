@@ -1,8 +1,7 @@
 "use client";
 
 import type { Project } from "@mogoj/shared";
-import { Clock, FolderKanban } from "lucide-react";
-import { PriorityBadge } from "@/components/shared/Badge";
+import { CalendarClock, FolderKanban, ListChecks } from "lucide-react";
 import { EntityIcon } from "@/components/shared/EntityIcon";
 import { useUIStore } from "@/store/useUIStore";
 import { cn, formatDate, isOverdue } from "@/lib/utils";
@@ -24,7 +23,7 @@ export function ProjectKanbanCardContent({ project }: { project: Project }) {
             e.stopPropagation();
             openProjectDetail(project.id);
           }}
-          className="line-clamp-2 cursor-pointer text-left text-sm font-medium leading-snug hover:underline"
+          className="line-clamp-2 cursor-pointer pr-6 text-left text-sm font-medium leading-snug hover:underline"
         >
           {project.name}
         </button>
@@ -37,30 +36,31 @@ export function ProjectKanbanCardContent({ project }: { project: Project }) {
       )}
 
       {totalTasks > 0 && (
-        <div className="flex flex-col gap-1">
-          <div className="h-1.5 overflow-hidden rounded-full bg-muted">
-            <div className="h-full bg-emerald-500" style={{ width: `${progressPct}%` }} />
-          </div>
-          <span className="text-xs text-muted-foreground">
-            {completedTasks}/{totalTasks} tasks ({progressPct}%)
-          </span>
+        <div className="h-1 overflow-hidden rounded-full bg-muted">
+          {/* scaleX instead of width so progress changes animate on the compositor */}
+          <div
+            className="h-full origin-left bg-brand transition-transform duration-(--dur-slow) ease-soft"
+            style={{ transform: `scaleX(${progressPct / 100})` }}
+          />
         </div>
       )}
 
-      <div className="flex flex-wrap items-center gap-2">
-        <PriorityBadge priority={project.priority} />
-        {project.endDate && (
-          <span
-            className={cn(
-              "flex items-center gap-1 text-xs text-muted-foreground",
-              overdue && "font-medium text-destructive",
-            )}
-          >
-            <Clock className="h-3 w-3" />
-            {formatDate(project.endDate, "MMM d")}
-          </span>
-        )}
-      </div>
+      {(totalTasks > 0 || project.endDate) && (
+        <div className="flex items-center gap-3 border-t border-border pt-2 font-mono text-[11px] tabular-nums text-muted-foreground">
+          {totalTasks > 0 && (
+            <span className="inline-flex items-center gap-1" title="Tasks done">
+              <ListChecks className="h-3.5 w-3.5" />
+              {completedTasks}/{totalTasks}
+            </span>
+          )}
+          {project.endDate && (
+            <span className={cn("ml-auto inline-flex items-center gap-1", overdue && "text-red-400")}>
+              <CalendarClock className="h-3.5 w-3.5" />
+              {formatDate(project.endDate, "MMM d")}
+            </span>
+          )}
+        </div>
+      )}
     </div>
   );
 }

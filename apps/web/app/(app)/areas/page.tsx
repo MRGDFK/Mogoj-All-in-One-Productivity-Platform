@@ -19,7 +19,7 @@ export default function AreasPage() {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [icon, setIcon] = useState("folder");
+  const [icon, setIcon] = useState("Folder");
   const [color, setColor] = useState<string>(ICON_COLORS[0]!);
   const [error, setError] = useState<string | null>(null);
   const createArea = useCreateArea();
@@ -43,7 +43,7 @@ export default function AreasPage() {
       await createArea.mutateAsync(parsed.data);
       setName("");
       setDescription("");
-      setIcon("folder");
+      setIcon("Folder");
       setColor(ICON_COLORS[0]!);
       setOpen(false);
     } catch (err) {

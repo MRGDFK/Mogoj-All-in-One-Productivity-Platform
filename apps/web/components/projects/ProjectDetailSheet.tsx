@@ -1,5 +1,7 @@
 "use client";
 
+import { breatheClass } from "@/lib/priorityBreath";
+import { NAME_MAX, resolveRename } from "@/lib/entityName";
 import { useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -24,13 +26,6 @@ const STATUS_OPTIONS: { label: string; value: ProjectStatus }[] = [
   { label: "Completed", value: "completed" },
   { label: "Archived", value: "archived" },
 ];
-
-const PRIORITY_TRIGGER_CLASSES: Record<Priority, string> = {
-  low: "border-green-200 text-green-700 bg-green-50/80",
-  medium: "border-amber-200 text-amber-700 bg-amber-50/80",
-  high: "border-orange-200 text-orange-700 bg-orange-50/80",
-  critical: "border-red-300 text-red-700 bg-red-50/80 font-semibold",
-};
 
 export function ProjectDetailSheet() {
   const projectDetailId = useUIStore((s) => s.projectDetailId);
@@ -96,11 +91,12 @@ function ProjectDetailForm({
   return (
     <div className="flex flex-col gap-3 overflow-y-auto p-3">
       <div className="flex items-center justify-between">
-        <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+        <span className="text-xs text-muted-foreground">
           Project workspace
         </span>
         <Link
           href={`/projects/${project.id}`}
+          onClick={closeProjectDetail}
           className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
         >
           Open full page
@@ -119,7 +115,13 @@ function ProjectDetailForm({
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
-          onBlur={() => name.trim() && name !== project.name && updateProject.mutate({ name: name.trim() })}
+          onBlur={() => {
+            const next = resolveRename(name, project.name, NAME_MAX.project);
+            if (next) updateProject.mutate({ name: next });
+            else setName(project.name);
+          }}
+          maxLength={NAME_MAX.project}
+          aria-label="Project name"
           className="w-full truncate border-none bg-transparent p-0 text-sm font-semibold tracking-tight outline-none"
         />
       </div>
@@ -150,7 +152,7 @@ function ProjectDetailForm({
             value={project.priority}
             onValueChange={(v) => updateProject.mutate({ priority: v as Priority })}
           >
-            <SelectTrigger className={cn("h-7 px-2 text-xs font-medium", PRIORITY_TRIGGER_CLASSES[project.priority])}>
+            <SelectTrigger className={cn("h-7 px-2 text-xs font-medium", breatheClass(project.priority, project.status))}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

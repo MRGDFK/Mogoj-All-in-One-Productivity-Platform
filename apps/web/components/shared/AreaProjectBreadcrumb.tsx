@@ -24,17 +24,17 @@ export function AreaProjectBreadcrumb({
   return (
     <div
       className={cn(
-        "flex items-center gap-1.5 border-b border-slate-100 px-6 py-2.5 text-xs",
+        "flex items-center gap-1.5 border-b border-border px-6 py-2.5 text-xs",
         className,
       )}
     >
       <EntityIcon icon={areaIcon} color={areaColor} size={14} />
-      <span className={cn(areaName ? "font-medium text-slate-600" : "text-slate-400")}>
+      <span className={cn(areaName ? "font-medium text-muted-foreground" : "text-muted-foreground")}>
         {areaName || "No area"}
       </span>
-      <ChevronRight className="h-3 w-3 text-slate-400" aria-hidden="true" />
+      <ChevronRight className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
       <EntityIcon icon={projectIcon} color={projectColor} size={14} fallback={FolderKanban} />
-      <span className={cn(projectName ? "font-medium text-slate-600" : "text-slate-400")}>
+      <span className={cn(projectName ? "font-medium text-muted-foreground" : "text-muted-foreground")}>
         {projectName || "No project"}
       </span>
     </div>

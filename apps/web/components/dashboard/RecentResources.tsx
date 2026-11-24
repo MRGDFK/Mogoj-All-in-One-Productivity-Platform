@@ -16,17 +16,17 @@ export function RecentResources({ resources }: { resources: Resource[] }) {
   }
 
   return (
-    <ul className="space-y-1.5">
+    <ul className="-mx-2">
       {resources.map((resource) => {
         const Icon = TYPE_ICON[resource.type];
         return (
           <li key={resource.id}>
             <Link
               href={`/resources/${resource.id}`}
-              className="flex items-center gap-2 rounded-md border border-border px-2.5 py-1.5 transition-colors hover:bg-accent"
+              className="flex items-center gap-2.5 rounded-lg px-2 py-2 transition-colors duration-(--dur-fast) hover:bg-white/[0.04]"
             >
               <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
-              <span className="truncate text-sm font-medium">{resource.title}</span>
+              <span className="truncate text-sm">{resource.title}</span>
             </Link>
           </li>
         );

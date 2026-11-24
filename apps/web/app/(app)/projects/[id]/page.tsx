@@ -1,5 +1,6 @@
 "use client";
 
+import { breatheClass } from "@/lib/priorityBreath";
 import { use, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Calendar, Columns3, Flag, Layers, List, Plus, Trash2, TrendingUp } from "lucide-react";
@@ -15,6 +16,8 @@ import { getDeadlineDisplay } from "@/lib/deadline";
 import { matchesRelativeDate, RELATIVE_DATE_OPTIONS } from "@/lib/relativeDate";
 import { PRIORITY_ORDER, sortItems } from "@/lib/sort";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { EditableTitle } from "@/components/shared/EditableTitle";
+import { NAME_MAX } from "@/lib/entityName";
 import { Button } from "@/components/shared/Button";
 import { Loader } from "@/components/shared/Loader";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
@@ -39,13 +42,6 @@ import { PropertyRow } from "@/components/shared/PropertyRow";
 import { FolderKanban } from "lucide-react";
 import { PriorityIcon, PRIORITY_LABELS } from "@/components/shared/PriorityIcon";
 import { cn } from "@/lib/utils";
-
-const PRIORITY_TRIGGER_CLASSES: Record<Priority, string> = {
-  low: "border-green-200 text-green-700 bg-green-50/80",
-  medium: "border-amber-200 text-amber-700 bg-amber-50/80",
-  high: "border-orange-200 text-orange-700 bg-orange-50/80",
-  critical: "border-red-300 text-red-700 bg-red-50/80 font-semibold",
-};
 
 const SORT_FIELDS = [
   { label: "Due Date", value: "dueDate" },
@@ -206,7 +202,15 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
       </Button>
 
       <PageHeader
-        title={project.name}
+        title={
+          <EditableTitle
+            key={`${project.id}:${project.name}`}
+            name={project.name}
+            maxLength={NAME_MAX.project}
+            label="Project name"
+            onRename={(name) => updateProject.mutate({ name })}
+          />
+        }
         icon={
           <IconPicker
             icon={project.icon}
@@ -241,7 +245,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
       />
 
       {/* Properties */}
-      <div className="mb-4 rounded-xl border border-border/60 bg-card">
+      <div className="mb-4 glass rounded-2xl">
         <PropertyRow icon={Layers} label="Area">
           <Select value={project.areaId} onValueChange={(v) => updateProject.mutate({ areaId: v })}>
             <SelectTrigger className="h-8 w-full max-w-xs border-none bg-transparent px-1 text-sm font-medium shadow-none">
@@ -263,7 +267,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
         <PropertyRow icon={Flag} label="Priority">
           <Select value={project.priority} onValueChange={(v) => updateProject.mutate({ priority: v as Priority })}>
             <SelectTrigger
-              className={cn("h-8 w-full max-w-xs px-2 text-sm font-medium", PRIORITY_TRIGGER_CLASSES[project.priority])}
+              className={cn("h-8 w-full max-w-xs px-2 text-sm font-medium", breatheClass(project.priority, project.status))}
             >
               <SelectValue />
             </SelectTrigger>
@@ -361,6 +365,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                 statuses={TASK_KANBAN_COLUMNS}
                 visuals={TASK_COLUMN_VISUALS}
                 getStatus={(task) => task.status}
+                getPriority={(task) => task.priority}
                 withStatus={(task, status, order) => ({ ...task, status, order })}
                 onMove={handleMoveTask}
                 renderContent={(task) => (
@@ -433,3 +438,4 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
     </div>
   );
 }
+

@@ -1,9 +1,15 @@
 import type { ReactNode } from "react";
+import type { Priority } from "@mogoj/shared";
+import { KanbanCardShell } from "@/components/projects/KanbanCard";
+import { BREATHE_STRIP_CLASS } from "@/lib/priorityBreath";
 
-export function DragOverlayCard({ children }: { children: ReactNode }) {
+export function DragOverlayCard({ priority, breathing, children }: { priority?: Priority; breathing?: boolean; children: ReactNode }) {
   return (
-    <div className="flex w-72 rotate-2 scale-[1.02] cursor-grabbing rounded-lg bg-white p-3 text-sm opacity-95 shadow-lg">
-      <div className="min-w-0 flex-1">{children}</div>
-    </div>
+    <KanbanCardShell
+      priority={priority}
+      className={`w-66 rotate-[1.5deg] scale-[1.02] cursor-grabbing shadow-[0_24px_48px_rgb(0_0_0/0.5)] ${breathing ? BREATHE_STRIP_CLASS : ""}`}
+    >
+      <div className="min-w-0 p-3">{children}</div>
+    </KanbanCardShell>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Calendar, CircleDot, Columns3, Flag, FolderKanban, Layers, LayoutGrid, List, Plus } from "lucide-react";
 import type { Priority, Task, TaskQuery, TaskStatus } from "@mogoj/shared";
@@ -12,6 +12,8 @@ import { getApiErrorMessage } from "@/lib/api";
 import { matchesRelativeDate, RELATIVE_DATE_OPTIONS } from "@/lib/relativeDate";
 import { PRIORITY_ORDER, sortItems } from "@/lib/sort";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/shared/Select";
+import { encodeQuickAddTarget, parseQuickAddTarget, QUICK_ADD_STORAGE_KEY, resolveStoredTarget } from "@/lib/quickAddTarget";
 import { Button } from "@/components/shared/Button";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { ViewToggle } from "@/components/shared/ViewToggle";
@@ -79,29 +81,46 @@ export default function TasksPage() {
   const moveTask = useMoveTask();
   const deleteTask = useDeleteTask();
 
-  const defaultAreaId = useMemo(() => {
-    if (areas && areas.length > 0) return areas[0]?.id;
-    return undefined;
-  }, [areas]);
+  // Quick-add destination: chosen explicitly and remembered; never defaults to the first area/project.
+  const [quickAddTarget, setQuickAddTarget] = useState<string | null>(null);
+  useEffect(() => {
+    if (!areas || !projects) return;
+    let stored: string | null = null;
+    try {
+      stored = localStorage.getItem(QUICK_ADD_STORAGE_KEY);
+    } catch {
+      /* storage unavailable: start with no destination */
+    }
+    setQuickAddTarget(resolveStoredTarget(stored, areas, projects));
+  }, [areas, projects]);
+  const chooseQuickAddTarget = useCallback((value: string) => {
+    setQuickAddTarget(value);
+    try {
+      localStorage.setItem(QUICK_ADD_STORAGE_KEY, value);
+    } catch {
+      /* not persisted; still works for this visit */
+    }
+  }, []);
+  const quickAddDestination = parseQuickAddTarget(quickAddTarget);
 
-  const defaultProjectId = useMemo(() => {
-    if (projects && projects.length > 0) return projects[0]?.id;
-    return undefined;
-  }, [projects]);
-
-  const canQuickAdd = Boolean(defaultAreaId || defaultProjectId);
+  // Deep link from search: /tasks?taskId=… opens that task's drawer.
+  useEffect(() => {
+    const taskId = new URLSearchParams(window.location.search).get("taskId");
+    if (!taskId) return;
+    openTaskDetail(taskId);
+    window.history.replaceState(null, "", "/tasks");
+  }, [openTaskDetail]);
 
   const handleQuickAdd = useCallback(
     (title: string, status: TaskStatus) => {
+      if (!quickAddDestination) return;
       const input = {
         title,
         status,
         priority: "medium" as const,
         tags: [],
         isRecurring: false,
-        ...(defaultProjectId
-          ? { projectId: defaultProjectId }
-          : { areaId: defaultAreaId }),
+        ...quickAddDestination,
       };
 
       createTask.mutate(input, {
@@ -113,7 +132,7 @@ export default function TasksPage() {
         },
       });
     },
-    [createTask, defaultAreaId, defaultProjectId],
+    [createTask, quickAddDestination],
   );
 
   const filterFields: FilterFieldConfig[] = useMemo(
@@ -193,6 +212,25 @@ export default function TasksPage() {
       <div className="mb-4 flex items-center justify-between gap-2">
         <ViewToggle value={view} onChange={setView} options={VIEW_OPTIONS} />
         <div className="flex gap-2">
+          {view === "kanban" && (
+            <Select value={quickAddTarget ?? undefined} onValueChange={chooseQuickAddTarget}>
+              <SelectTrigger aria-label="Quick add to" className="h-9 w-56">
+                <SelectValue placeholder="Quick add to…" />
+              </SelectTrigger>
+              <SelectContent>
+                {areas?.map((a) => (
+                  <SelectItem key={a.id} value={encodeQuickAddTarget("area", a.id)}>
+                    Area · {a.name}
+                  </SelectItem>
+                ))}
+                {projects?.map((pr) => (
+                  <SelectItem key={pr.id} value={encodeQuickAddTarget("project", pr.id)}>
+                    Project · {pr.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
           <FilterPopover fields={filterFields} value={filters} onChange={setFilters} />
           <SortPopover fieldOptions={SORT_FIELDS} value={sort} onChange={setSort} />
         </div>
@@ -207,19 +245,21 @@ export default function TasksPage() {
             statuses={TASK_KANBAN_COLUMNS}
             visuals={TASK_COLUMN_VISUALS}
             getStatus={(task) => task.status}
+            getPriority={(task) => task.priority}
             withStatus={(task, status, order) => ({ ...task, status, order })}
             onMove={handleMove}
             renderContent={(task) => <TaskKanbanCardContent task={task} onTitleClick={() => openTaskDetail(task.id)} />}
             onOpen={(task) => openTaskDetail(task.id)}
             onDelete={(task) => setTaskToDelete(task)}
             emptyLabel="No tasks"
-            renderQuickAdd={
-              canQuickAdd
-                ? (status) => (
-                    <QuickAddInput status={status} onAdd={handleQuickAdd} disabled={createTask.isPending} />
-                  )
-                : undefined
-            }
+            renderQuickAdd={(status) => (
+              <QuickAddInput
+                status={status}
+                onAdd={handleQuickAdd}
+                disabled={createTask.isPending || !quickAddDestination}
+                disabledLabel={quickAddDestination ? undefined : "Choose where quick-add goes"}
+              />
+            )}
           />,
           <TaskList
             key="list"

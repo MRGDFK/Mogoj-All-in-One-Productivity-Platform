@@ -1,7 +1,9 @@
 import { cva, type VariantProps } from "class-variance-authority";
 import * as React from "react";
 import { cn } from "@/lib/utils";
-import { PriorityIcon } from "@/components/shared/PriorityIcon";
+import type { Priority } from "@mogoj/shared";
+import { PriorityIcon, PRIORITY_LABELS, PRIORITY_PILL_CLASSES } from "@/components/shared/PriorityIcon";
+import { breatheClass } from "@/lib/priorityBreath";
 
 const badgeVariants = cva(
   "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium",
@@ -10,8 +12,8 @@ const badgeVariants = cva(
       variant: {
         default: "bg-secondary text-secondary-foreground",
         primary: "bg-primary/10 text-primary",
-        success: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
-        warning: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+        success: "bg-emerald-500/10 text-emerald-400 dark:text-emerald-400",
+        warning: "bg-amber-500/10 text-amber-400 dark:text-amber-400",
         danger: "bg-destructive/10 text-destructive",
         outline: "border border-border text-foreground",
       },
@@ -30,25 +32,11 @@ export function Badge({ className, variant, ...props }: BadgeProps) {
   return <span className={cn(badgeVariants({ variant }), className)} {...props} />;
 }
 
-const PRIORITY_VARIANT = {
-  low: "default",
-  medium: "primary",
-  high: "warning",
-  critical: "danger",
-} as const;
-
-const PRIORITY_BADGE_CLASSES: Record<string, string> = {
-  low: "border-green-200 text-green-700 bg-green-50/80 shadow-sm shadow-green-100",
-  medium: "border-amber-200 text-amber-700 bg-amber-50/80 shadow-sm shadow-amber-100",
-  high: "border-orange-200 text-orange-700 bg-orange-50/80 shadow-sm shadow-orange-100",
-  critical: "border-red-300 text-red-700 bg-red-50/80 font-extrabold shadow-sm shadow-red-100 animate-pulse",
-};
-
-export function PriorityBadge({ priority }: { priority: keyof typeof PRIORITY_VARIANT }) {
+export function PriorityBadge({ priority, status }: { priority: Priority; status?: string }) {
   return (
-    <Badge variant={PRIORITY_VARIANT[priority]} className={cn("border", PRIORITY_BADGE_CLASSES[priority])}>
-      <PriorityIcon priority={priority} />
-      {priority}
-    </Badge>
+    <span className={cn("inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium", PRIORITY_PILL_CLASSES[priority], breatheClass(priority, status))}>
+      <PriorityIcon priority={priority} size={12} />
+      {PRIORITY_LABELS[priority]}
+    </span>
   );
 }

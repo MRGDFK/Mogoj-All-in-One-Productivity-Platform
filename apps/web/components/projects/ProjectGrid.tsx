@@ -1,6 +1,8 @@
 "use client";
 
 import type { Project } from "@mogoj/shared";
+import { m } from "motion/react";
+import { staggerIn } from "@/lib/motion";
 import { FolderKanban } from "lucide-react";
 import { Loader } from "@/components/shared/Loader";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -44,8 +46,10 @@ export function ProjectGrid({ projects, isLoading }: { projects: Project[] | und
             {group.area?.name ?? "No area"}
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {group.projects.map((project) => (
-              <ProjectCard key={project.id} project={project} />
+            {group.projects.map((project, i) => (
+              <m.div key={project.id} {...staggerIn(i)}>
+                <ProjectCard project={project} />
+              </m.div>
             ))}
           </div>
         </div>
