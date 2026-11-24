@@ -3,13 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { animate, m } from "motion/react";
-import { useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
-import { toast } from "sonner";
-import type { HQDashboard as HQData } from "@mogoj/shared";
 import { useDashboard } from "@/hooks/useDashboard";
-import { useCreateInboxItem } from "@/hooks/useInbox";
-import { getApiErrorMessage } from "@/lib/api";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Loader } from "@/components/shared/Loader";
 import { TodayTasks } from "@/components/dashboard/TodayTasks";
@@ -18,6 +13,9 @@ import { RecentResources } from "@/components/dashboard/RecentResources";
 import { ActivityFeed } from "@/components/dashboard/ActivityFeed";
 import { ThroughputChart } from "@/components/dashboard/ThroughputChart";
 import { NewTaskModal } from "@/components/tasks/NewTaskModal";
+import { useQuickCaptureShortcut } from "@/hooks/useQuickCaptureShortcut";
+import { useUIStore } from "@/store/useUIStore";
+import { formatShortcut, isMacPlatform } from "@/lib/shortcut";
 import { cn, formatDate, isOverdue } from "@/lib/utils";
 import { staggerIn } from "@/lib/motion";
 
@@ -105,54 +103,25 @@ function changeNote(current: number, previous: number): string {
   return `${diff > 0 ? "+" : ""}${diff} vs last week`;
 }
 
-function QuickCapture() {
-  const queryClient = useQueryClient();
-  const createItem = useCreateInboxItem();
-  const [title, setTitle] = useState("");
-
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    const value = title.trim();
-    if (!value) return;
-    // Optimistic: clear the field and bump the inbox count now; the mutation's invalidate reconciles
-    setTitle("");
-    queryClient.setQueriesData<HQData>({ queryKey: ["dashboard"] }, (old) =>
-      old && { ...old, inboxUnprocessedCount: old.inboxUnprocessedCount + 1 },
-    );
-    createItem.mutate(
-      { title: value, type: "task", attachments: [] },
-      {
-        onSuccess: () => toast.success("Captured to Inbox"),
-        onError: (err) => {
-          setTitle(value);
-          queryClient.invalidateQueries({ queryKey: ["dashboard"] });
-          toast.error(getApiErrorMessage(err) || "Couldn't capture");
-        },
-      },
-    );
-  }
-
+function QuickCaptureButton() {
+  const open = useUIStore((s) => s.setQuickCaptureOpen);
+  const { shortcut } = useQuickCaptureShortcut();
   return (
-    <form onSubmit={handleSubmit} className="w-full sm:w-80">
-      <label className="glass flex h-9 items-center gap-2 rounded-xl px-3 transition-colors duration-(--dur-fast) focus-within:border-brand/50">
-        <Plus className="h-4 w-4 shrink-0 text-muted-foreground" />
-        <input
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Escape") {
-              setTitle("");
-              e.currentTarget.blur();
-            }
-          }}
-          placeholder="Quick capture to Inbox…"
-          aria-label="Quick capture to Inbox"
-          maxLength={300}
-          className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-        />
-        <kbd className="hidden shrink-0 font-mono text-[10px] text-muted-foreground sm:block">↵</kbd>
-      </label>
-    </form>
+    <button
+      type="button"
+      onClick={() => open(true)}
+      className="glass flex h-9 items-center gap-2 rounded-xl px-3 text-sm text-muted-foreground transition-colors duration-(--dur-fast) hover:text-foreground"
+    >
+      <Plus className="h-4 w-4" />
+      Quick capture
+      <span className="flex gap-0.5">
+        {formatShortcut(shortcut, isMacPlatform()).map((k) => (
+          <kbd key={k} className="rounded border border-white/10 bg-white/[0.04] px-1 font-mono text-[10px]">
+            {k}
+          </kbd>
+        ))}
+      </span>
+    </button>
   );
 }
 
@@ -273,7 +242,7 @@ export function HQDashboard() {
 
   return (
     <div>
-      <PageHeader title={formatDate(new Date(), "EEEE, MMMM d")} description={summary} actions={<QuickCapture />} />
+      <PageHeader title={formatDate(new Date(), "EEEE, MMMM d")} description={summary} actions={<QuickCaptureButton />} />
       <div className="space-y-3">
         {blocks.map((block, i) => (
           // One entrance on load: rows fade and rise with a small stagger

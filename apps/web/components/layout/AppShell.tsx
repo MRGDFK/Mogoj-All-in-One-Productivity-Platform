@@ -4,6 +4,7 @@ import { Header } from "@/components/layout/Header";
 import { TaskDetailPanel } from "@/components/tasks/TaskDetailPanel";
 import { ProjectDetailSheet } from "@/components/projects/ProjectDetailSheet";
 import { ResourceDetailSheet } from "@/components/resources/ResourceDetailSheet";
+import { QuickCaptureDialog } from "@/components/layout/QuickCaptureDialog";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   // Floating chrome: sidebar and header sit inset from the window edges as glass panels
@@ -18,6 +19,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <TaskDetailPanel />
       <ProjectDetailSheet />
       <ResourceDetailSheet />
+      <QuickCaptureDialog />
     </div>
     </MotionProvider>
   );

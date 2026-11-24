@@ -17,6 +17,9 @@ interface UIState {
   openResourceDetail: (resourceId: string) => void;
   closeResourceDetail: () => void;
 
+  quickCaptureOpen: boolean;
+  setQuickCaptureOpen: (open: boolean) => void;
+
   processInboxItemId: string | null;
   openProcessModal: (inboxItemId: string) => void;
   closeProcessModal: () => void;
@@ -38,6 +41,9 @@ export const useUIStore = create<UIState>((set) => ({
   resourceDetailId: null,
   openResourceDetail: (resourceId) => set({ resourceDetailId: resourceId }),
   closeResourceDetail: () => set({ resourceDetailId: null }),
+
+  quickCaptureOpen: false,
+  setQuickCaptureOpen: (open) => set({ quickCaptureOpen: open }),
 
   processInboxItemId: null,
   openProcessModal: (inboxItemId) => set({ processInboxItemId: inboxItemId }),

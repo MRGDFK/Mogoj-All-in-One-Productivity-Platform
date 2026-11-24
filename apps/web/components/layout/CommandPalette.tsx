@@ -45,7 +45,8 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
   // ⌘K / Ctrl+K toggles the palette from anywhere
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key.toLowerCase() === "k" && (e.metaKey || e.ctrlKey)) {
+      // Exactly Mod+K: Mod+Shift+K (and other combos) belong to quick capture
+      if (e.key.toLowerCase() === "k" && (e.metaKey || e.ctrlKey) && !e.shiftKey && !e.altKey) {
         e.preventDefault();
         onOpenChange(!open);
       }
