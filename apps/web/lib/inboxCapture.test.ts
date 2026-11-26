@@ -36,7 +36,7 @@ describe("buildInboxCapture", () => {
     const long = "x".repeat(350);
     const item = buildInboxCapture(long, "note");
     assert.equal(item?.title.length, 300);
-    assert.equal((item?.body?.content?.[0] as { content: { text: string }[] }).content[0].text, long);
+    assert.equal((item?.body?.content?.[0] as { content?: { text: string }[] } | undefined)?.content?.[0]?.text, long);
   });
 
   it("passes the chosen type through", () => {
