@@ -95,7 +95,7 @@ export function MobileTabBar() {
                   setCreateOpen(false);
                   runCreateAction(key);
                 }}
-                className="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left transition-colors duration-(--dur-fast) hover:bg-white/[0.06] focus-visible:bg-white/[0.06] focus-visible:outline-none"
+                className="spotlight flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left transition-colors duration-(--dur-fast) hover:bg-white/[0.06] focus-visible:bg-white/[0.06] focus-visible:outline-none"
               >
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04]">
                   <Icon className="h-5 w-5" strokeWidth={1.75} />

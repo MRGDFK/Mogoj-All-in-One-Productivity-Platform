@@ -108,7 +108,7 @@ function SidebarNav({ pillId, mobile = false }: { pillId: string; mobile?: boole
       {!mobile && (
         <div className="px-3 pb-2">
           <DropdownMenu>
-            <DropdownMenuTrigger className="flex w-full items-center gap-2.5 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm font-medium transition-colors duration-(--dur-fast) hover:bg-white/[0.07] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+            <DropdownMenuTrigger className="spotlight flex w-full items-center gap-2.5 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm font-medium transition-colors duration-(--dur-fast) hover:bg-white/[0.07] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
               <Plus className="h-4 w-4" strokeWidth={1.75} />
               New
             </DropdownMenuTrigger>

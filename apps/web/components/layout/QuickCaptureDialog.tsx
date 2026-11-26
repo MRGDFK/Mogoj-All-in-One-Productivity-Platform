@@ -27,9 +27,9 @@ const TYPES: { value: InboxType; label: string }[] = [
 ];
 
 const ROUND_BTN =
-  "flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-muted-foreground transition-colors duration-(--dur-fast) hover:bg-white/[0.08] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+  "spotlight flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-muted-foreground transition-colors duration-(--dur-fast) hover:bg-white/[0.08] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 const CHIP =
-  "flex h-10 items-center gap-2 rounded-full border px-4 text-sm transition-colors duration-(--dur-fast) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+  "spotlight flex h-10 items-center gap-2 rounded-full border px-4 text-sm transition-colors duration-(--dur-fast) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
 /** App-wide Quick Capture (Inbox only), opened by the user's shortcut (default Mod+Shift+K) or any + menu. */
 export function QuickCaptureDialog() {
@@ -56,10 +56,12 @@ export function QuickCaptureDialog() {
         {/* Phones: full-screen sheet. sm and up: the same content as a centered dialog. */}
         <Dialog.Content
           aria-describedby={undefined}
-          className="glass-overlay fixed inset-0 z-50 flex flex-col overflow-y-auto rounded-none border-0 px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-[max(1rem,env(safe-area-inset-top))] duration-200 ease-soft focus:outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:slide-in-from-bottom-4 sm:inset-auto sm:left-1/2 sm:top-1/2 sm:max-h-[calc(100dvh-3rem)] sm:w-[calc(100%-32px)] sm:max-w-xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-3xl sm:border sm:p-6 sm:data-[state=open]:slide-in-from-bottom-0 sm:data-[state=open]:zoom-in-[0.97]"
-          style={{ boxShadow: "inset 0 1px 0 rgb(255 255 255 / 0.1), 0 24px 64px rgb(0 0 0 / 0.5), 0 0 120px -8px rgb(124 156 255 / 0.35)" }}
+          className="glass-overlay fixed inset-0 z-50 flex flex-col overflow-y-auto rounded-none border-0 px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-[max(1rem,env(safe-area-inset-top))] duration-200 ease-soft focus:outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:slide-in-from-bottom-4 sm:inset-auto sm:left-1/2 sm:top-1/2 sm:max-h-[calc(100dvh-3rem)] sm:w-[calc(100%-32px)] sm:max-w-xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-3xl sm:border sm:border-white/12 sm:p-6 sm:data-[state=open]:slide-in-from-bottom-0 sm:data-[state=open]:zoom-in-[0.97]"
+          style={{ boxShadow: "inset 0 1px 0 rgb(255 255 255 / 0.1), 0 24px 64px rgb(0 0 0 / 0.5), 0 0 120px -8px rgb(124 156 255 / 0.45)" }}
         >
           <CaptureScreen onClose={() => setOpen(false)} />
+          {/* Soft specular glint along the bottom edge (dialog layout only) */}
+          <span aria-hidden className="pointer-events-none absolute inset-x-1/4 bottom-0 hidden h-px bg-gradient-to-r from-transparent via-white/40 to-transparent sm:block" />
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>
@@ -174,7 +176,7 @@ function CaptureScreen({ onClose }: { onClose: () => void }) {
       </div>
 
       <form
-        className="surface-card mt-5 rounded-2xl p-4"
+        className="spotlight mt-5 rounded-2xl border border-white/10 bg-white/[0.035] p-4 shadow-[inset_0_1px_0_rgb(255_255_255/0.09),0_10px_30px_rgb(0_0_0/0.25)]"
         onSubmit={(e) => {
           e.preventDefault();
           submit(false);
@@ -197,7 +199,7 @@ function CaptureScreen({ onClose }: { onClose: () => void }) {
             }
           }}
           placeholder="A thought, task or link. The first line becomes the title."
-          className="mt-3 w-full resize-none rounded-xl border border-white/10 bg-black/30 px-3 py-2.5 text-[15px] leading-relaxed text-foreground shadow-[inset_0_1px_2px_rgb(0_0_0/0.4)] outline-none placeholder:text-muted-foreground focus-visible:border-ring/60"
+          className="mt-3 w-full resize-none rounded-xl border border-white/10 bg-black/40 px-3 py-2.5 text-[15px] leading-relaxed text-foreground shadow-[inset_0_1px_2px_rgb(0_0_0/0.4)] outline-none placeholder:text-muted-foreground focus-visible:border-ring/60"
         />
 
         <div className="mt-3 flex flex-wrap gap-2">
@@ -297,7 +299,7 @@ function ActionCard({
     <button
       type="button"
       onClick={onClick}
-      className="surface-card group relative flex min-h-28 flex-col sm:min-h-24 rounded-2xl p-4 text-left transition-[border-color] duration-(--dur-fast) hover:border-white/[0.14] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="surface-card spotlight group relative flex min-h-28 flex-col sm:min-h-24 rounded-2xl p-4 text-left transition-[border-color] duration-(--dur-fast) hover:border-white/[0.14] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
       <Icon className="h-5 w-5" strokeWidth={1.75} />
       <span className="mt-auto pt-4 text-sm font-medium">{label}</span>
