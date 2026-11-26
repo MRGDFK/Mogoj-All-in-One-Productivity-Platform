@@ -10,8 +10,7 @@ import type {
   TagInput,
 } from "@mogoj/shared";
 import { prisma } from "../../config/db.js";
-import { r2Client } from "../../config/r2.js";
-import { env } from "../../config/env.js";
+import { r2 } from "../../config/r2.js";
 import { ApiError } from "../../utils/ApiError.js";
 import { writeActivityLog } from "../activity/activity.service.js";
 import { toJsonInput } from "../../utils/prismaJson.js";
@@ -137,18 +136,19 @@ export async function deleteResource(userId: string, id: string) {
 }
 
 export async function createPresignedUpload(userId: string, input: PresignUploadInput) {
+  if (!r2) throw new ApiError(503, "File uploads are not configured");
   const ext = input.filename.split(".").pop() ?? "bin";
   const key = `users/${userId}/${crypto.randomUUID()}.${ext}`;
 
   const command = new PutObjectCommand({
-    Bucket: env.R2_BUCKET_NAME,
+    Bucket: r2.bucket,
     Key: key,
     ContentType: input.contentType,
     ContentLength: input.sizeBytes,
   });
 
-  const uploadUrl = await getSignedUrl(r2Client, command, { expiresIn: 300 });
-  const publicUrl = `${env.R2_PUBLIC_URL}/${key}`;
+  const uploadUrl = await getSignedUrl(r2.client, command, { expiresIn: 300 });
+  const publicUrl = `${r2.publicUrl}/${key}`;
 
   return { uploadUrl, publicUrl, key };
 }

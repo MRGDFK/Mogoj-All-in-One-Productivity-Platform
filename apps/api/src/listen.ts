@@ -1,6 +1,6 @@
 import { env } from "./config/env.js";
 import { prisma } from "./config/db.js";
-import { app } from "./app.js";
+import app from "./app.js";
 
 async function main() {
   await prisma.$connect();

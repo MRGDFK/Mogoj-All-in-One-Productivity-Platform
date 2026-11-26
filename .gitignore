@@ -7,8 +7,7 @@ out/
 coverage/
 .turbo/
 .env
-.env.local
-.env.*.local
+.env.*
 !.env.example
 !.env.*.example
 *.log
@@ -21,4 +20,6 @@ pnpm-debug.log*
 apps/api/prisma/dev.db
 tsconfig.tsbuildinfo
 .claude
+.vercel/
+*secrets*.env
 CLAUDE.md
