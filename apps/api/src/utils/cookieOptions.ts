@@ -3,14 +3,13 @@ import { env } from "../config/env.js";
 
 const isProd = env.NODE_ENV === "production";
 
-// Cross-origin (Vercel <-> Railway) cookies require SameSite=None + Secure in
-// production. In local dev, frontend/backend run on different ports of
-// localhost, which browsers treat as cross-site too, but `Lax` + no Secure
-// works fine over plain http://localhost.
+// The web app proxies /api/v1 to the API (next.config rewrite), so cookies are
+// first-party to the web origin: SameSite=Lax, Secure in production, and no
+// Domain attribute (host-only).
 export const accessTokenCookieOptions: CookieOptions = {
   httpOnly: true,
   secure: isProd,
-  sameSite: isProd ? "none" : "lax",
+  sameSite: "lax",
   path: "/",
   maxAge: 15 * 60 * 1000, // 15 minutes
 };
@@ -18,7 +17,7 @@ export const accessTokenCookieOptions: CookieOptions = {
 export const refreshTokenCookieOptions: CookieOptions = {
   httpOnly: true,
   secure: isProd,
-  sameSite: isProd ? "none" : "lax",
+  sameSite: "lax",
   path: "/api/v1/auth",
   maxAge: env.REFRESH_TOKEN_TTL_DAYS * 24 * 60 * 60 * 1000,
 };
@@ -28,7 +27,7 @@ export const refreshTokenCookieOptions: CookieOptions = {
 export const csrfTokenCookieOptions: CookieOptions = {
   httpOnly: false,
   secure: isProd,
-  sameSite: isProd ? "none" : "lax",
+  sameSite: "lax",
   path: "/",
   maxAge: 15 * 60 * 1000,
 };

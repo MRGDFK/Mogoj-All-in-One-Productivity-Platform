@@ -1,6 +1,6 @@
 # Mogoj — Architecture
 
-> Status: describes the codebase as of 2026-11-23 (after the "frosted graphite" redesign).
+> Status: describes the codebase as of 2026-11-24 (after the "frosted graphite" redesign, the HQ upgrade, quick capture, and the Project Activity / Timeline / Calendar work). Open work is tracked in `docs/REMAINING_WORK_PLAN.md`.
 > Audience: anyone changing Mogoj, including future you. For setup commands see `README.md`; for agent rules see `CLAUDE.md`.
 
 ## 1. What Mogoj is
@@ -67,7 +67,8 @@ apps/
     components/<domain>/        # feature components
     components/shared/          # primitives: Button, Modal, Sheet, Select, Badge, EditableTitle, …
     hooks/use<Domain>.ts        # one TanStack Query hook file per domain
-    lib/                        # api client, utils, colors, entityName, priorityBreath, tiptap, deadline
+    lib/                        # api client, utils, colors, entityName, priorityBreath, tiptap, deadline,
+                                #   shortcut, calendarGrid, timeline, kanbanColors, areaMetrics, quickAddTarget (pure logic + tests)
     store/useUIStore.ts         # ephemeral UI state (Zustand)
 packages/
   shared/src/{schemas,types,constants}
@@ -122,18 +123,25 @@ erDiagram
 - Processed items animate out of the list.
 
 ### HQ dashboard (`/`)
-- Header: today's date + live summary ("4 due today · 2 overdue · 7 in inbox").
-- Stat tiles with count-up animation: due today, overdue, active projects, completed this week (with change vs last week).
-- **Created vs completed** chart over the last 8 weeks, computed from `ActivityLog` (`bucketThroughput` in `dashboard.service.ts`).
-- Today list (tick to complete), active projects with progress bars, recent resources, recent activity.
+- Header: today's date + live summary ("4 due today · 2 overdue · 7 in inbox") and a Quick capture button showing the current shortcut.
+- Stat tiles with count-up animation, each a link that opens `/tasks` or `/projects` pre-filtered: due today, overdue, active projects, completed this week (with change vs last week).
+- **Project Activity** chart (`ThroughputChart.tsx`, exports `ProjectActivityCard`): smooth created vs completed curves (recharts), legend, hover tooltip that snaps to the nearest bucket, and a `2W · 8W · 6M · All` range toggle. Data comes from `GET /dashboard/throughput` (computed from `ActivityLog`, helpers in `modules/dashboard/throughput.ts`). Animation is off under `prefers-reduced-motion`.
+- Today list (tick to complete, add task) with an "Up next" section (next 3 days) when fewer than 3 tasks are due, active projects with progress bars and an add-task action, recent resources and recent activity. Project and resource rows open slide-overs.
+- **Calendar widget** (`HQCalendarWidget`): mini month grid with a dot under each date that has tasks due (rose when overdue or critical), a selected-day preview of up to 3 tasks, and **Expand** into the full month calendar (`TaskCalendarModal`).
 
 ### Tasks (`/tasks`)
-- Three always-mounted views: **Kanban**, list, cards (switching never unmounts — see `AnimatedViewSwitch`).
-- Filters, sort, quick add per column, subtasks, work logs, due-date badges (Today / Tomorrow / Nd overdue).
-- Task detail opens as a cross-page slide-over via `useUIStore.openTaskDetail(id)`.
+- Five always-mounted views: **Kanban**, list, cards, **Timeline** and **Calendar** (switching never unmounts — see `AnimatedViewSwitch`, which takes N panels and marks inactive ones `inert`).
+- Filters (also set from HQ links via `?dueDate=` / `?status=`), sort, quick add per column with an explicit destination, subtasks, due-date badges (Today / Tomorrow / Nd overdue). A work-log API exists (`POST /tasks/:id/worklogs`) but no UI yet.
+- Task detail opens as a cross-page slide-over via `useUIStore.openTaskDetail(id)`; `/tasks?taskId=` deep-links to it.
+- **Calendar view** (`TaskMonthCalendar`, shared with the HQ modal): Monday-start 6-week grid, filter pills (All, areas, Overdue), per-day hover "+" to add a task due that day, task chips with an inline checkbox and project/area tag, click a chip to open the task, drag a chip to another day to reschedule (noon-UTC due date, optimistic).
+- **Timeline view** (`TimelineView`, shared with Projects): grouped by project, bars from start date (or due date − 2 days) to due date, overdue bars rose, done bars green.
+
+### Timeline (shared component)
+- `components/shared/TimelineView.tsx` with date math in `lib/timeline.ts`. Toolbar: period title, "No date (N)" popover (each undated item gets "Schedule today"), Week / Month / Quarter zoom, `‹ Today ›`, `+ New`.
+- Split pane: sticky 220px name column with collapsible groups, and a scrollable day grid with weekend shading and a **Today** line. Bars drag to move and have a right-edge handle to resize (custom pointer handling, 4px threshold so a plain click opens the sheet). Off-screen items get jump buttons. Rescheduling writes `startDate` / `dueDate` (tasks) or `startDate` / `endDate` (projects) optimistically.
 
 ### Projects (`/projects`, `/projects/:id`)
-- Portfolio metrics, Kanban by project status, list and card views.
+- Portfolio metrics, Kanban by project status, list, card and **Timeline** views (grouped by area; project bars show a progress fill).
 - Project page: inline-editable name, icon + color picker, status, priority, dates, its own task board, notes and linked resources.
 
 ### Areas (`/areas`, `/areas/:id`)
@@ -148,12 +156,14 @@ erDiagram
 - Archived areas and projects, kept out of active views.
 
 ### Cross-cutting
-- **⌘K command palette**: jump to any page or search tasks, projects, areas and resources.
+- **⌘K command palette**: jump to any page or search tasks, projects, areas and resources. Task results open the detail drawer.
+- **Quick capture** (`QuickCaptureDialog`, mounted in `AppShell`): a popup opened from anywhere by a user-defined shortcut (default ⌘⇧K, set in Settings and stored in `preferences.quickCaptureShortcut`; ⌘K is reserved). Choose destination (Inbox or Today), area, priority and due date; Enter captures and closes, Shift+Enter keeps it open. Logic in `lib/shortcut.ts`.
 - **Kanban priority strip**: every card carries a colored strip above it (Low / Medium / High priority / Critical).
 - **Critical "breathing"**: critical tags breathe everywhere they appear (strip, labels, priority dropdowns): their red tint deepens and text brightens while a red glow swells around them, on one 2.4s timeline. They stop once done/completed/archived. Rule: `lib/priorityBreath.ts`; styles: `.breathe-critical` in `app/globals.css`.
 - **Icon picker**: Lucide icons, emoji or uploaded image; 24 dark-safe colors plus a custom color.
 - **Failure feedback**: optimistic Kanban moves revert and show an error toast when the API rejects them.
-- Settings: profile (name, avatar).
+- Settings: profile (name, avatar) and the quick-capture shortcut recorder (rejects the reserved ⌘K, with Reset).
+- **Kanban column colors**: any column can be recolored; stored in `preferences.kanbanColors`.
 
 ## 6. How it operates
 
@@ -217,7 +227,11 @@ flowchart LR
 
 ### 6.6 Dashboard aggregation
 
-`GET /dashboard` runs its queries in parallel: tasks due today or earlier (not done), active projects with task counts, recent resources, recent activity, unprocessed inbox count, active project count, and task `created` / `completed` activity for the last 8 weeks bucketed by Monday-start week (server local time).
+`GET /dashboard` runs its queries in parallel: tasks due today or earlier (not done), `upcomingTasks` (due in the next 3 days, up to 5), active projects with task counts and area icon, recent resources, recent activity, unprocessed inbox count and active project count.
+
+`GET /dashboard/throughput?range=2w|8w|6m|all` (default `8w`) returns `{ unit: "week" | "month", points: [{ periodStart, created, completed }] }` from `ActivityLog`. `periodStarts` / `bucketByPeriod` in `modules/dashboard/throughput.ts` are pure and unit-tested: weeks start on Monday, `6m` is six calendar months, `all` starts at the first activity (min 2, max 24 months); bucketing uses server local time. The web caches it under `["throughput", range]`, deliberately not under `["dashboard"]` (the optimistic task writers assume that key holds the HQ shape) and task mutations invalidate it.
+
+The calendar and timeline don't use `/dashboard`: they read `GET /tasks` with `dueAfter` / `dueBefore`. Due dates are calendar days stored as noon UTC and read by UTC day (`lib/deadline.ts`, `lib/calendarGrid.ts`); "today" is the viewer's local day.
 
 ### 6.7 Search
 
@@ -259,7 +273,7 @@ All routes are under `/api/v1`, require auth except `register` / `login` / `refr
 | resources | `GET /` · `POST /` · `POST /upload-url` · `GET /:id` · `PATCH /:id` · `DELETE /:id` |
 | notes | `GET /` · `POST /` · `GET /:id` · `PATCH /:id` · `DELETE /:id` |
 | inbox | `GET /` · `POST /` · `PATCH /:id` · `DELETE /:id` · `POST /:id/process` |
-| dashboard | `GET /` |
+| dashboard | `GET /` · `GET /throughput?range=2w\|8w\|6m\|all` |
 | search | `GET /?q=` |
 
 ## 9. Configuration, running and verification
@@ -274,11 +288,11 @@ All routes are under `/api/v1`, require auth except `register` / `login` / `refr
 
 **Verification**
 - `pnpm typecheck` and `pnpm lint` (zero warnings allowed) across all workspaces.
-- Focused unit tests using Node's built-in runner (no framework installed):
+- Unit tests (85 today) use Node's built-in runner; no framework is installed. They cover pure logic only: `apps/web/lib/*.test.ts` (colors, entity names, priority breathing, kanban colors, area metrics, shortcuts, calendar grid, timeline math, …) and `apps/api/src/modules/dashboard/throughput.test.ts`.
   ```bash
-  W="$PWD/apps/web/lib"
-  pnpm --filter @mogoj/api exec tsx --test "$W/colors.test.ts" "$W/entityName.test.ts" "$W/priorityBreath.test.ts"
+  R="$PWD"; pnpm --filter @mogoj/api exec tsx --test "$R"/apps/web/lib/*.test.ts "$R"/apps/api/src/modules/dashboard/*.test.ts
   ```
+  Web lib files under test use relative imports because `@/` doesn't resolve under Node. There are no component, API integration or E2E tests (roadmap P0-3). Evidence reports for past work are in `.claude/tdd/`.
 - Don't run `next build` while `make dev` is running: both write `apps/web/.next`, and the build breaks the dev server's chunks.
 
 ## 10. Known limitations and improvement roadmap
@@ -290,7 +304,7 @@ Grouped by priority. Each item notes what exists today, so it can be checked aga
 |---|---|---|
 | 1 | **No rate limiting** on any route, including `POST /auth/login`. | Add `express-rate-limit` (strict on auth routes, looser globally) and progressive delay on failed logins. |
 | 2 | **No password reset or email verification** (auth exposes only register / login / logout / refresh / me / profile). | Add reset-token flow (hashed, short-lived, single-use, like refresh tokens) plus a transactional email provider. |
-| 3 | **No automated test suite or CI.** Only three small `node:test` files. | Add Vitest for web + shared, API integration tests against a throwaway Postgres (services + routes), Playwright for the critical flows (login, inbox process, Kanban drag), and a GitHub Actions pipeline running typecheck, lint and tests. |
+| 3 | **No CI, framework or integration tests.** 85 `node:test` unit tests cover pure logic only; no component, API integration or E2E tests. | Add Vitest for web + shared, API integration tests against a throwaway Postgres (services + routes), Playwright for the critical flows (login, inbox process, Kanban drag), and a GitHub Actions pipeline running typecheck, lint and tests. |
 | 4 | **Logging is `console` only**; no request IDs or error tracking. | Structured logger (pino) with request IDs, plus an error tracker (e.g. Sentry) on web and api. |
 
 ### P1: scale and data consistency
@@ -300,16 +314,16 @@ Grouped by priority. Each item notes what exists today, so it can be checked aga
 | 6 | **Tags are modelled twice**: a `Tag` table for resources, an embedded JSON array on tasks. | Use one `Tag` model with relations to tasks and resources so tags can be renamed, recolored and filtered everywhere. |
 | 7 | **`isRecurring` is stored but nothing acts on it**: no recurrence rule, no next-instance generation. | Add a recurrence rule (RRULE-style) and create the next instance when a recurring task completes. |
 | 8 | **Search is substring `ILIKE` on titles/names only**; doesn't look inside resource or note content. | Postgres full-text search (`tsvector` + GIN index) over titles and TipTap plain text, with ranking. |
-| 9 | **Dashboard weeks use server local time**; users have no timezone. `User.preferences` (JSON) exists but is unused for this. | Store the user's timezone in `preferences` and bucket "today" / weeks in it. |
+| 9 | **Dashboard weeks and throughput buckets use server local time**; users have no timezone. `User.preferences` (JSON) exists but is unused for this. | Store the user's timezone in `preferences` and bucket "today" / weeks in it. |
 | 10 | **Work logs are append-only** (`POST /:id/worklogs` only). | Edit/delete endpoints, plus optional time-spent per log to enable time reporting. |
 
 ### P2: product
 | # | Today | Improvement |
 |---|---|---|
-| 11 | **Desktop only**: sidebar is fixed at 256px; `sidebarOpen` / `toggleSidebar` exist in `useUIStore` but nothing uses them. | Collapsible sidebar and a mobile drawer, Kanban horizontal snap on small screens, then a PWA with offline capture. |
-| 12 | **Capture only inside the app.** | Global quick-capture shortcut (⌘⇧I), share-sheet / email-to-inbox, browser extension for links. |
+| 11 | **Desktop only** (open; planned in `REMAINING_WORK_PLAN.md` B9): sidebar is fixed at 256px; `sidebarOpen` / `toggleSidebar` exist in `useUIStore` but nothing uses them. | Collapsible sidebar and a mobile drawer, Kanban horizontal snap on small screens, then a PWA with offline capture. |
+| 12 | **Capture only inside the app.** The global quick-capture popup is **done** (user-defined shortcut, default ⌘⇧K). | Remaining: share-sheet / email-to-inbox, browser extension for links. |
 | 13 | **No reminders or notifications.** | Due-date reminders (email/push) for today and overdue, plus a weekly review digest. That last one fits PARA's weekly-review habit. |
-| 14 | **Dashboard has no calendar.** It only receives tasks due today or earlier. | Add an upcoming-tasks range to `/dashboard` and a mini calendar of due dates. |
+| 14 | **Done in UI:** HQ calendar widget, full month calendar and Tasks Calendar view exist. They query `GET /tasks` by due range, not a `/dashboard` range. | Optional: a dashboard-side range and per-day counts once user timezones land (#9). |
 | 15 | **Archive covers areas and projects only.** | Archive and restore resources too, with "archived on" dates and bulk restore. |
 | 16 | **Dark theme only.** | Light theme from the same token set (surfaces and text roles invert; priority hues re-tuned). |
 

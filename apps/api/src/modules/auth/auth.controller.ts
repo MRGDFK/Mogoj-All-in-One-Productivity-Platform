@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import type { RegisterInput, LoginInput, UpdateProfileInput } from "@mogoj/shared";
 import * as authService from "./auth.service.js";
 import { sendSuccess } from "../../utils/ApiResponse.js";
+import { env } from "../../config/env.js";
 import { ApiError } from "../../utils/ApiError.js";
 import { asyncHandler } from "../../utils/asyncHandler.js";
 import {
@@ -27,6 +28,7 @@ function clearAuthCookies(res: Response): void {
 }
 
 export const register = asyncHandler(async (req: Request, res: Response) => {
+  if (!env.ALLOW_REGISTRATION) throw ApiError.forbidden("Registration is disabled");
   const input = req.body as RegisterInput;
   const { user, tokens } = await authService.registerUser(input);
   setAuthCookies(res, tokens);
