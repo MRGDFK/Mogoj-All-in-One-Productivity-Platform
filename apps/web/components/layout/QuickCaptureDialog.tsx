@@ -29,7 +29,7 @@ const TYPES: { value: InboxType; label: string }[] = [
 const ROUND_BTN =
   "spotlight flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-muted-foreground transition-colors duration-(--dur-fast) hover:bg-white/[0.08] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 const CHIP =
-  "spotlight flex h-10 items-center gap-2 rounded-full border px-4 text-sm transition-colors duration-(--dur-fast) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+  "spotlight flex h-10 items-center gap-2 rounded-full border px-4 text-sm max-sm:h-9 transition-colors duration-(--dur-fast) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
 /** App-wide Quick Capture (Inbox only), opened by the user's shortcut (default Mod+Shift+K) or any + menu. */
 export function QuickCaptureDialog() {
@@ -53,15 +53,15 @@ export function QuickCaptureDialog() {
     <Dialog.Root open={open} onOpenChange={setOpen}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-black/45 backdrop-blur-[6px] duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
-        {/* Phones: full-screen sheet. sm and up: the same content as a centered dialog. */}
+        {/* Floating glass card everywhere: anchored near the top on phones (stays above the keyboard), centered from sm. */}
         <Dialog.Content
           aria-describedby={undefined}
-          className="glass-overlay fixed inset-0 z-50 flex flex-col overflow-y-auto rounded-none border-0 px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-[max(1rem,env(safe-area-inset-top))] duration-200 ease-soft focus:outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:slide-in-from-bottom-4 sm:inset-auto sm:left-1/2 sm:top-1/2 sm:max-h-[calc(100dvh-3rem)] sm:w-[calc(100%-32px)] sm:max-w-xl sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-3xl sm:border sm:border-white/12 sm:p-6 sm:data-[state=open]:slide-in-from-bottom-0 sm:data-[state=open]:zoom-in-[0.97]"
+          className="glass-overlay fixed left-1/2 top-[max(0.75rem,env(safe-area-inset-top))] z-50 flex max-h-[calc(100dvh-1.5rem-env(safe-area-inset-top)-env(safe-area-inset-bottom))] w-[calc(100%-1.5rem)] max-w-xl -translate-x-1/2 flex-col overflow-y-auto rounded-3xl border border-white/12 p-4 duration-200 ease-soft focus:outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-[0.97] data-[state=closed]:zoom-out-[0.97] sm:top-1/2 sm:max-h-[calc(100dvh-3rem)] sm:-translate-y-1/2 sm:p-6"
           style={{ boxShadow: "inset 0 1px 0 rgb(255 255 255 / 0.1), 0 24px 64px rgb(0 0 0 / 0.5), 0 0 120px -8px rgb(124 156 255 / 0.45)" }}
         >
           <CaptureScreen onClose={() => setOpen(false)} />
-          {/* Soft specular glint along the bottom edge (dialog layout only) */}
-          <span aria-hidden className="pointer-events-none absolute inset-x-1/4 bottom-0 hidden h-px bg-gradient-to-r from-transparent via-white/40 to-transparent sm:block" />
+          {/* Soft specular glint along the bottom edge */}
+          <span aria-hidden className="pointer-events-none absolute inset-x-1/4 bottom-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent" />
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>
@@ -170,13 +170,13 @@ function CaptureScreen({ onClose }: { onClose: () => void }) {
         </DropdownMenu>
       </div>
 
-      <div className="mt-5 space-y-1">
-        <Dialog.Title className="text-2xl font-medium">Quick Capture</Dialog.Title>
-        <p className="text-sm text-muted-foreground">Capture anything. It lands in your Inbox to sort out later.</p>
+      <div className="mt-4 space-y-1 sm:mt-5">
+        <Dialog.Title className="text-xl font-medium sm:text-2xl">Quick Capture</Dialog.Title>
+        <p className="text-sm text-muted-foreground">Capture anything. It lands in your Inbox.</p>
       </div>
 
       <form
-        className="spotlight mt-5 rounded-2xl border border-white/10 bg-white/[0.035] p-4 shadow-[inset_0_1px_0_rgb(255_255_255/0.09),0_10px_30px_rgb(0_0_0/0.25)]"
+        className="spotlight mt-4 rounded-2xl sm:mt-5 border border-white/10 bg-white/[0.035] p-4 shadow-[inset_0_1px_0_rgb(255_255_255/0.09),0_10px_30px_rgb(0_0_0/0.25)]"
         onSubmit={(e) => {
           e.preventDefault();
           submit(false);
@@ -199,7 +199,7 @@ function CaptureScreen({ onClose }: { onClose: () => void }) {
             }
           }}
           placeholder="A thought, task or link. The first line becomes the title."
-          className="mt-3 w-full resize-none rounded-xl border border-white/10 bg-black/40 px-3 py-2.5 text-[15px] leading-relaxed text-foreground shadow-[inset_0_1px_2px_rgb(0_0_0/0.4)] outline-none placeholder:text-muted-foreground focus-visible:border-ring/60"
+          className="mt-3 w-full resize-none rounded-xl max-sm:h-[5.25rem] border border-white/10 bg-black/40 px-3 py-2.5 text-[15px] leading-relaxed text-foreground shadow-[inset_0_1px_2px_rgb(0_0_0/0.4)] outline-none placeholder:text-muted-foreground focus-visible:border-ring/60"
         />
 
         <div className="mt-3 flex flex-wrap gap-2">
@@ -259,8 +259,8 @@ function CaptureScreen({ onClose }: { onClose: () => void }) {
         </p>
       </form>
 
-      <h3 className="mt-6 text-sm font-medium text-muted-foreground">Or create directly</h3>
-      <div className="mt-3 grid grid-cols-2 gap-3">
+      <h3 className="mt-5 text-sm font-medium text-muted-foreground sm:mt-6">Or create directly</h3>
+      <div className="mt-3 grid grid-cols-2 gap-2.5 sm:gap-3">
         {CREATE_ACTIONS.filter((a) => a.key !== "capture").map(({ key, label, hint, icon: Icon }) => (
           <ActionCard
             key={key}
@@ -299,11 +299,11 @@ function ActionCard({
     <button
       type="button"
       onClick={onClick}
-      className="surface-card spotlight group relative flex min-h-28 flex-col sm:min-h-24 rounded-2xl p-4 text-left transition-[border-color] duration-(--dur-fast) hover:border-white/[0.14] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="surface-card spotlight group relative flex min-h-20 flex-col rounded-2xl p-3.5 sm:min-h-24 sm:p-4 text-left transition-[border-color] duration-(--dur-fast) hover:border-white/[0.14] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
       <Icon className="h-5 w-5" strokeWidth={1.75} />
-      <span className="mt-auto pt-4 text-sm font-medium">{label}</span>
-      <span className="text-xs text-muted-foreground">{hint}</span>
+      <span className="mt-auto pt-3 text-sm font-medium sm:pt-4">{label}</span>
+      <span className="text-xs text-muted-foreground max-sm:hidden">{hint}</span>
       <span
         aria-hidden
         className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full bg-white/[0.06] text-muted-foreground transition-colors duration-(--dur-fast) group-hover:bg-white/[0.12] group-hover:text-foreground"
