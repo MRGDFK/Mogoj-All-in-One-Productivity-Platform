@@ -49,7 +49,7 @@ export function MobileTabBar() {
       <nav
         aria-label="Main"
         className={cn(
-          "glass fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-40 mx-auto grid h-16 max-w-md grid-cols-5 items-center rounded-full px-2 transition-transform duration-(--dur-base) ease-soft lg:hidden",
+          "glass-frost fixed inset-x-3 bottom-[calc(0.75rem+env(safe-area-inset-bottom))] z-40 mx-auto grid h-16 max-w-md grid-cols-5 items-center rounded-full px-2 transition-transform duration-(--dur-base) ease-soft lg:hidden",
           typing && "translate-y-[calc(100%+2rem)]",
         )}
       >

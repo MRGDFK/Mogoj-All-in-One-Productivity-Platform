@@ -161,10 +161,12 @@ function SidebarNav({ pillId, mobile = false }: { pillId: string; mobile?: boole
           ))}
         </div>
 
+        {/* No heading for an empty list (new accounts have no areas yet) */}
+        {areas && areas.length > 0 && (
         <div>
           <p className="px-3 pb-2 text-xs font-medium text-muted-foreground">Areas</p>
           <div>
-            {areas?.map((area) => {
+            {areas.map((area) => {
               const href = `/areas/${area.id}`;
               return (
                 <NavLink
@@ -180,6 +182,7 @@ function SidebarNav({ pillId, mobile = false }: { pillId: string; mobile?: boole
             })}
           </div>
         </div>
+        )}
       </nav>
 
       <div className="border-t border-border p-3">

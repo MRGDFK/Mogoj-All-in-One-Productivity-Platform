@@ -49,10 +49,20 @@ describe("frosted graphite surfaces", () => {
     assert.match(glass, /inset 0 1px 0 rgb\(255 255 255 \/ 0\.09\)/);
   });
 
-  it("glass-overlay is denser with a stronger blur", () => {
+  // Floating surfaces must stay frosted when a browser reports backdrop-filter support but
+  // doesn't draw it (seen on Android Chrome): at 58–76% page text read straight through.
+  const alpha = (src: string) => Number(/background-color: rgb\(\d+ \d+ \d+ \/ ([\d.]+)\)/.exec(src)?.[1]);
+
+  it("glass-overlay stays frosted without blur (>= 98% opaque) and keeps a stronger blur", () => {
     const overlay = block(/@utility glass-overlay \{/);
-    assert.match(overlay, /rgb\(24 27 34 \/ 0\.76\)/);
-    assert.match(overlay, /blur\(24px\) saturate\(160%\)/);
+    assert.ok(alpha(overlay) >= 0.98, `glass-overlay alpha ${alpha(overlay)}`);
+    assert.match(overlay, /blur\(28px\) saturate\(160%\)/);
+  });
+
+  it("glass-frost (floating mobile bar) stays frosted without blur (>= 98% opaque)", () => {
+    const frost = block(/@utility glass-frost \{/);
+    assert.ok(alpha(frost) >= 0.98, `glass-frost alpha ${alpha(frost)}`);
+    assert.match(frost, /backdrop-filter: blur\(24px\)/);
   });
 
   it("repeated cards get a machined-graphite surface WITHOUT backdrop blur", () => {
