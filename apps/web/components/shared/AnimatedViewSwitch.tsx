@@ -19,6 +19,8 @@ interface AnimatedViewSwitchProps {
  * coordinates inside the Kanban panel.
  * overflow-x-clip hides the off-screen panels horizontally only, without
  * clipping vertically, so glows like .breathe-critical aren't cut off.
+ * Each panel clips too: a panel wider than its slot (e.g. a table on a phone)
+ * would otherwise paint over the visible neighbour.
  */
 export function AnimatedViewSwitch({
   index,
@@ -37,7 +39,7 @@ export function AnimatedViewSwitch({
       >
         {children.map((child, i) => (
           // Inactive panels are hidden from tab order and screen readers but stay mounted
-          <div key={i} className="min-w-0 flex-shrink-0" style={{ width: `${100 / children.length}%` }} inert={i !== index}>
+          <div key={i} className="min-w-0 flex-shrink-0 overflow-x-clip [overflow-clip-margin:12px]" style={{ width: `${100 / children.length}%` }} inert={i !== index}>
             {child}
           </div>
         ))}

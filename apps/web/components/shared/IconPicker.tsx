@@ -100,6 +100,7 @@ export function IconPicker({ icon, color, onChange, triggerSize = 40, className,
       <PopoverTrigger asChild>
         <button
           type="button"
+          aria-label="Change icon"
           className={cn(
             "flex items-center justify-center rounded-xl border border-border bg-card transition-colors hover:border-border",
             className,

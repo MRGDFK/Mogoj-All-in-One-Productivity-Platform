@@ -10,8 +10,9 @@ import { useUIStore } from "@/store/useUIStore";
 import { cn } from "@/lib/utils";
 
 // Shared by the header and every row so the columns always line up
+// Phones: a wrapping two-line row (name + actions, then meta); the table columns start at sm
 export const PROJECT_ROW_GRID =
-  "grid grid-cols-[minmax(0,2.4fr)_minmax(0,1fr)_6.5rem_7rem_minmax(8rem,1.2fr)_7rem_4rem] items-center gap-3";
+  "flex flex-wrap items-center gap-x-3 gap-y-2 sm:grid sm:grid-cols-[minmax(0,2.4fr)_minmax(0,1fr)_6.5rem_7rem_minmax(8rem,1.2fr)_7rem_4rem] sm:gap-3";
 
 const STATUS_VARIANT = {
   active: "primary",
@@ -46,12 +47,12 @@ export function ProjectRow({ project, onDelete }: { project: Project; onDelete: 
     >
       <span className="row-edge" aria-hidden />
 
-      <div className="row-nudge flex min-w-0 items-center gap-2.5">
+      <div className="row-nudge flex min-w-0 items-center gap-2.5 max-sm:order-1 max-sm:w-[calc(100%-5.5rem)]">
         <EntityIcon icon={project.icon} color={project.color} size={16} fallback={FolderKanban} />
         <span className="truncate text-sm font-medium">{project.name}</span>
       </div>
 
-      <div className="min-w-0">
+      <div className="min-w-0 max-sm:order-3">
         {project.area?.name && (
           <span className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
             <EntityIcon icon={project.area.icon} color={project.area.color} size={12} />
@@ -60,17 +61,17 @@ export function ProjectRow({ project, onDelete }: { project: Project; onDelete: 
         )}
       </div>
 
-      <div>
+      <div className="max-sm:order-3">
         <Badge variant={STATUS_VARIANT[project.status]} className="capitalize">
           {project.status.replace("_", " ")}
         </Badge>
       </div>
 
-      <div>
+      <div className="max-sm:order-3">
         <PriorityBadge priority={project.priority} status={project.status} />
       </div>
 
-      <div className="flex items-center gap-2.5">
+      <div className="flex items-center gap-2.5 max-sm:order-3 max-sm:w-32">
         {totalTasks > 0 ? (
           <>
             <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
@@ -91,11 +92,11 @@ export function ProjectRow({ project, onDelete }: { project: Project; onDelete: 
         )}
       </div>
 
-      <div>
+      <div className={cn("max-sm:order-3", !project.endDate && "max-sm:hidden")}>
         {project.endDate ? <DeadlineBadge dueDate={project.endDate} /> : <span className="text-xs text-muted-foreground">—</span>}
       </div>
 
-      <div className="row-actions flex items-center justify-end gap-0.5">
+      <div className="row-actions flex items-center justify-end gap-0.5 max-sm:order-2 max-sm:ml-auto">
         <ArrowUpRight className="h-4 w-4 text-muted-foreground" aria-hidden />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

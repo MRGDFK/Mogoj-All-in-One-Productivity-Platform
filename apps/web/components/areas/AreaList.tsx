@@ -6,12 +6,14 @@ import type { Area } from "@mogoj/shared";
 import { EntityIcon } from "@/components/shared/EntityIcon";
 import { cn } from "@/lib/utils";
 
-const ROW_GRID = "grid grid-cols-[minmax(0,2fr)_6rem_6rem_minmax(8rem,1.2fr)_2rem] items-center gap-3";
+// Phones: a wrapping two-line row (name, then counts + progress); the table columns start at sm
+const ROW_GRID =
+  "flex flex-wrap items-center gap-x-4 gap-y-1.5 sm:grid sm:grid-cols-[minmax(0,2fr)_6rem_6rem_minmax(8rem,1.2fr)_2rem] sm:gap-3";
 
 export function AreaList({ areas }: { areas: Area[] }) {
   return (
     <div className="text-sm">
-      <div className={cn(ROW_GRID, "border-b border-border px-3 pb-2 text-xs font-medium text-muted-foreground")}>
+      <div className={cn(ROW_GRID, "border-b border-border px-3 pb-2 text-xs font-medium text-muted-foreground max-sm:hidden")}>
         <span>Area</span>
         <span>Projects</span>
         <span>Open tasks</span>
@@ -31,16 +33,22 @@ export function AreaList({ areas }: { areas: Area[] }) {
               style={{ "--row-accent": area.color } as React.CSSProperties}
             >
               <span className="row-edge" aria-hidden />
-              <div className="row-nudge flex min-w-0 items-center gap-2.5">
+              <div className="row-nudge flex min-w-0 items-center gap-2.5 max-sm:w-[calc(100%-3rem)]">
                 <EntityIcon icon={area.icon} color={area.color} size={16} />
                 <span className="truncate font-medium">{area.name}</span>
                 {area.description && (
                   <span className="hidden truncate text-xs text-muted-foreground lg:inline">{area.description}</span>
                 )}
               </div>
-              <span className="font-mono text-xs tabular-nums">{area.projectCount ?? 0}</span>
-              <span className="font-mono text-xs tabular-nums">{open}</span>
-              <div className="flex items-center gap-2.5">
+              <span className="font-mono text-xs tabular-nums max-sm:order-3">
+                {area.projectCount ?? 0}
+                <span className="font-sans text-muted-foreground sm:hidden"> projects</span>
+              </span>
+              <span className="font-mono text-xs tabular-nums max-sm:order-3">
+                {open}
+                <span className="font-sans text-muted-foreground sm:hidden"> open</span>
+              </span>
+              <div className="flex items-center gap-2.5 max-sm:order-3 max-sm:w-32">
                 <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
                   <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: area.color }} />
                 </div>
@@ -48,7 +56,7 @@ export function AreaList({ areas }: { areas: Area[] }) {
                   {open + done > 0 ? `${pct}%` : "—"}
                 </span>
               </div>
-              <ArrowUpRight className="row-actions h-4 w-4 justify-self-end text-muted-foreground" aria-hidden />
+              <ArrowUpRight className="row-actions h-4 w-4 justify-self-end text-muted-foreground max-sm:order-2 max-sm:ml-auto" aria-hidden />
             </Link>
           );
         })}

@@ -28,7 +28,7 @@ export function ProjectList({ projects, isLoading, onDelete }: ProjectListProps)
 
   return (
     <div className="text-sm">
-      <div className={cn(PROJECT_ROW_GRID, "border-b border-border px-3 pb-2 text-xs font-medium text-muted-foreground")}>
+      <div className={cn(PROJECT_ROW_GRID, "border-b border-border px-3 pb-2 text-xs font-medium text-muted-foreground max-sm:hidden")}>
         <span>Project</span>
         <span>Area</span>
         <span>Status</span>

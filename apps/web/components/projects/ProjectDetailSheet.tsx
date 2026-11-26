@@ -4,8 +4,9 @@ import { breatheClass } from "@/lib/priorityBreath";
 import { NAME_MAX, resolveRename } from "@/lib/entityName";
 import { useState } from "react";
 import Link from "next/link";
+import * as Dialog from "@radix-ui/react-dialog";
 import { toast } from "sonner";
-import { FolderKanban, Maximize2, Trash2 } from "lucide-react";
+import { FolderKanban, Maximize2, Trash2, X } from "lucide-react";
 import type { Priority, Project, ProjectStatus } from "@mogoj/shared";
 import { SheetContent } from "@/components/shared/Sheet";
 import { EntityIcon } from "@/components/shared/EntityIcon";
@@ -90,18 +91,31 @@ function ProjectDetailForm({
 
   return (
     <div className="flex flex-col gap-3 overflow-y-auto p-3">
+      <Dialog.Title className="sr-only">{project.name}</Dialog.Title>
       <div className="flex items-center justify-between">
         <span className="text-xs text-muted-foreground">
           Project workspace
         </span>
-        <Link
-          href={`/projects/${project.id}`}
-          onClick={closeProjectDetail}
-          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
-        >
-          Open full page
-          <Maximize2 className="h-3 w-3" />
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href={`/projects/${project.id}`}
+            onClick={closeProjectDetail}
+            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+          >
+            Open full page
+            <Maximize2 className="h-3 w-3" />
+          </Link>
+          {/* Full-width on phones: no backdrop to tap and no Escape key, so the sheet needs its own way out */}
+          <Dialog.Close asChild>
+            <button
+              type="button"
+              aria-label="Close"
+              className="touch-hit relative rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+            >
+              <X className="h-[18px] w-[18px]" />
+            </button>
+          </Dialog.Close>
+        </div>
       </div>
 
       <div className="flex items-center gap-2">
