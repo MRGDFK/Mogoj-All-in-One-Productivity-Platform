@@ -412,12 +412,14 @@ function CompactCaptureContent({ onClose }: { onClose: () => void }) {
     >
       <Dialog.Title className="sr-only">Quick Capture</Dialog.Title>
       <form
+        autoComplete="off"
         onSubmit={(e) => {
           e.preventDefault();
           submit();
         }}
       >
         <input
+          autoComplete="off"
           ref={titleRef}
           value={title}
           onChange={(e) => setTitle(e.target.value)}
@@ -433,6 +435,7 @@ function CompactCaptureContent({ onClose }: { onClose: () => void }) {
           className="w-full bg-transparent px-2 pt-1.5 text-lg font-medium text-foreground outline-none placeholder:text-muted-foreground"
         />
         <textarea
+          autoComplete="off"
           ref={descRef}
           rows={2}
           value={description}

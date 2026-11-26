@@ -146,7 +146,7 @@ function TaskDetailForm({
           <div className="flex flex-col gap-1.5">
             <span className="text-xs text-muted-foreground">Status</span>
             <Select value={task.status} onValueChange={(v) => updateTask.mutate({ status: v as never })}>
-              <SelectTrigger className="h-8 border-border bg-card px-2 text-sm font-medium">
+              <SelectTrigger aria-label="Status" className="h-8 border-border bg-card px-2 text-sm font-medium">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -181,7 +181,7 @@ function TaskDetailForm({
           <div className="flex flex-col gap-1.5">
             <span className="text-xs text-muted-foreground">Priority</span>
             <Select value={task.priority} onValueChange={(v) => updateTask.mutate({ priority: v as never })}>
-              <SelectTrigger className={cn("h-8 px-2 text-sm font-medium", breatheClass(task.priority, task.status))}>
+              <SelectTrigger aria-label="Priority" className={cn("h-8 px-2 text-sm font-medium", breatheClass(task.priority, task.status))}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -221,7 +221,7 @@ function TaskDetailForm({
                 value={task.areaId ?? NO_AREA}
                 onValueChange={(v) => updateTask.mutate({ areaId: v === NO_AREA ? null : v })}
               >
-                <SelectTrigger className="h-8 border-border bg-card px-2 text-sm font-medium">
+                <SelectTrigger aria-label="Area" className="h-8 border-border bg-card px-2 text-sm font-medium">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -246,7 +246,7 @@ function TaskDetailForm({
                 value={task.projectId ?? NO_PROJECT}
                 onValueChange={(v) => updateTask.mutate({ projectId: v === NO_PROJECT ? null : v })}
               >
-                <SelectTrigger className="h-8 border-border bg-card px-2 text-sm font-medium">
+                <SelectTrigger aria-label="Project" className="h-8 border-border bg-card px-2 text-sm font-medium">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

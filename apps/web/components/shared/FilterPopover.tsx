@@ -61,7 +61,7 @@ export function FilterPopover({ fields, value, onChange }: FilterPopoverProps) {
                   {field.operatorLabel ?? "Is"}
                 </span>
                 <Select value={value[field.key] ?? "any"} onValueChange={(v) => setField(field.key, v)}>
-                  <SelectTrigger className="min-w-0 flex-1 whitespace-nowrap">
+                  <SelectTrigger aria-label={`Filter by ${field.label}`} className="min-w-0 flex-1 whitespace-nowrap">
                     <SelectValue placeholder={field.placeholder} />
                   </SelectTrigger>
                   <SelectContent>

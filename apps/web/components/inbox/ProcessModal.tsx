@@ -127,7 +127,7 @@ export function ProcessModal() {
           <div className="space-y-1.5">
             <Label>Area{target === "project" && " (required)"}</Label>
             <Select value={areaId} onValueChange={setAreaId}>
-              <SelectTrigger>
+              <SelectTrigger aria-label="Area">
                 <SelectValue placeholder="Choose an area" />
               </SelectTrigger>
               <SelectContent>
@@ -145,7 +145,7 @@ export function ProcessModal() {
           <div className="space-y-1.5">
             <Label>Project (optional)</Label>
             <Select value={projectId} onValueChange={setProjectId}>
-              <SelectTrigger>
+              <SelectTrigger aria-label="Project">
                 <SelectValue placeholder="Choose a project" />
               </SelectTrigger>
               <SelectContent>

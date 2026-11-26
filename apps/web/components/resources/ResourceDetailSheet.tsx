@@ -182,7 +182,7 @@ function ResourceDetailForm({ resource, updateResource, deleteResource, onClose 
               value={resource.status}
               onValueChange={(v) => updateResource.mutate({ status: v as ResourceStatus })}
             >
-              <SelectTrigger className="h-7 w-28 px-2 text-xs font-medium">
+              <SelectTrigger aria-label="Status" className="h-7 w-28 px-2 text-xs font-medium">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

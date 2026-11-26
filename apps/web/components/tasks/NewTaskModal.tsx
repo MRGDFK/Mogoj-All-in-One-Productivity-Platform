@@ -135,7 +135,7 @@ export function NewTaskModal({ open, onOpenChange, defaultProjectId, defaultDueD
           <div className="space-y-1.5">
             <Label>Project</Label>
             <Select value={projectId} onValueChange={setProjectId}>
-              <SelectTrigger>
+              <SelectTrigger aria-label="Project">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -154,7 +154,7 @@ export function NewTaskModal({ open, onOpenChange, defaultProjectId, defaultDueD
           <div className="space-y-1.5">
             <Label>Priority</Label>
             <Select value={priority} onValueChange={(v) => setPriority(v as Priority)}>
-              <SelectTrigger>
+              <SelectTrigger aria-label="Priority">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -183,7 +183,7 @@ export function NewTaskModal({ open, onOpenChange, defaultProjectId, defaultDueD
           <div className="space-y-1.5">
             <Label>Status</Label>
             <Select value={status} onValueChange={(v) => setStatus(v as TaskStatus)}>
-              <SelectTrigger>
+              <SelectTrigger aria-label="Status">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

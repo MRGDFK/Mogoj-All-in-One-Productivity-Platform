@@ -33,7 +33,7 @@ export function SortPopover({ fieldOptions, value, onChange }: SortPopoverProps)
       </PopoverTrigger>
       <PopoverContent className="flex w-auto gap-2">
         <Select value={value.field} onValueChange={(field) => onChange({ ...value, field })}>
-          <SelectTrigger className="w-36">
+          <SelectTrigger aria-label="Sort by" className="w-36">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -48,7 +48,7 @@ export function SortPopover({ fieldOptions, value, onChange }: SortPopoverProps)
           value={value.direction}
           onValueChange={(direction) => onChange({ ...value, direction: direction as SortDirection })}
         >
-          <SelectTrigger className="w-32">
+          <SelectTrigger aria-label="Sort direction" className="w-32">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

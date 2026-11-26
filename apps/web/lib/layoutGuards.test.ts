@@ -39,6 +39,32 @@ describe("detail sheets can always be closed on phones", () => {
   }
 });
 
+describe("dropdowns have an accessible name", () => {
+  // A Radix SelectTrigger only announces its current value ("Active") unless it is named.
+  it("every <SelectTrigger> has aria-label, aria-labelledby or an id a <label> can point at", () => {
+    const unnamed = [...tsxFiles(join(webRoot, "components")), ...tsxFiles(join(webRoot, "app"))].flatMap((file) =>
+      readFileSync(file, "utf8")
+        .split("\n")
+        .map((line, i) => ({ line, at: `${relative(webRoot, file)}:${i + 1}` }))
+        .filter(({ line }) => line.includes("<SelectTrigger") && !/aria-label|aria-labelledby|\sid=/.test(line))
+        .map(({ at }) => at),
+    );
+    assert.deepEqual(unnamed, []);
+  });
+});
+
+describe("phone quick capture stays above the keyboard", () => {
+  // Chrome Android's autofill strip (passwords/cards/addresses) sits on top of the keyboard but is not
+  // part of visualViewport, so it covered the docked card (S24 recording, 2026-11-27). Keep it from showing.
+  it("the compact capture form and its fields opt out of autofill", () => {
+    const src = read("components/layout/QuickCaptureDialog.tsx");
+    const compact = src.slice(src.indexOf("function CompactCaptureContent"));
+    for (const tag of ["<form", "<input", "<textarea"]) {
+      assert.match(compact, new RegExp(`${tag}\\s+autoComplete="off"`), `${tag} is missing autoComplete="off"`);
+    }
+  });
+});
+
 describe("view switches never bleed into each other", () => {
   it("each AnimatedViewSwitch panel clips its own horizontal overflow", () => {
     const panelLine = read("components/shared/AnimatedViewSwitch.tsx")

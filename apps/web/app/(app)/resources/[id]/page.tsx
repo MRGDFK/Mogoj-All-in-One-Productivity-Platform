@@ -200,7 +200,7 @@ export default function ResourceDetailPage({ params }: { params: Promise<{ id: s
             value={resource.status}
             onValueChange={(v) => updateResource.mutate({ status: v as ResourceStatus })}
           >
-            <SelectTrigger className="h-8 w-28 text-sm">
+            <SelectTrigger aria-label="Status" className="h-8 w-28 text-sm">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

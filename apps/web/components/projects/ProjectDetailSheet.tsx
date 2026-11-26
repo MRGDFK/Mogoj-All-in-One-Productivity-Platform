@@ -147,7 +147,7 @@ function ProjectDetailForm({
             value={project.status}
             onValueChange={(v) => updateProject.mutate({ status: v as ProjectStatus })}
           >
-            <SelectTrigger className="h-7 px-2 text-xs font-medium">
+            <SelectTrigger aria-label="Status" className="h-7 px-2 text-xs font-medium">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -166,7 +166,7 @@ function ProjectDetailForm({
             value={project.priority}
             onValueChange={(v) => updateProject.mutate({ priority: v as Priority })}
           >
-            <SelectTrigger className={cn("h-7 px-2 text-xs font-medium", breatheClass(project.priority, project.status))}>
+            <SelectTrigger aria-label="Priority" className={cn("h-7 px-2 text-xs font-medium", breatheClass(project.priority, project.status))}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -186,7 +186,7 @@ function ProjectDetailForm({
           <span className="text-muted-foreground">Area</span>
           <div className="flex items-center gap-1.5">
             <Select value={project.areaId} onValueChange={(v) => updateProject.mutate({ areaId: v })}>
-              <SelectTrigger className="h-7 px-2 text-xs font-medium">
+              <SelectTrigger aria-label="Area" className="h-7 px-2 text-xs font-medium">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

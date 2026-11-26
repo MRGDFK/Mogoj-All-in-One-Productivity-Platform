@@ -82,7 +82,7 @@ export function NewProjectModal({ open, onOpenChange, lockedAreaId }: NewProject
           <div className="space-y-1.5">
             <Label>Area</Label>
             <Select value={areaId} onValueChange={setAreaId}>
-              <SelectTrigger>
+              <SelectTrigger aria-label="Area">
                 <SelectValue placeholder="Choose an area" />
               </SelectTrigger>
               <SelectContent>

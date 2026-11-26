@@ -60,7 +60,7 @@ export function InboxCapture() {
 
       <div className="flex gap-2">
         <Select value={type} onValueChange={(v) => setType(v as InboxType)}>
-          <SelectTrigger className="w-32">
+          <SelectTrigger aria-label="Item type" className="w-32">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

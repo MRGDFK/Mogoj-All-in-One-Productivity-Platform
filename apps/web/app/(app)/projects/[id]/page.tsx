@@ -228,7 +228,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
               value={project.status}
               onValueChange={(v) => updateProject.mutate({ status: v as ProjectStatus })}
             >
-              <SelectTrigger className="w-36">
+              <SelectTrigger aria-label="Status" className="w-36">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -250,7 +250,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
       <div className="mb-4 glass rounded-2xl">
         <PropertyRow icon={Layers} label="Area">
           <Select value={project.areaId} onValueChange={(v) => updateProject.mutate({ areaId: v })}>
-            <SelectTrigger className="h-8 w-full max-w-xs border-none bg-transparent px-1 text-sm font-medium shadow-none">
+            <SelectTrigger aria-label="Area" className="h-8 w-full max-w-xs border-none bg-transparent px-1 text-sm font-medium shadow-none">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -268,7 +268,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
 
         <PropertyRow icon={Flag} label="Priority">
           <Select value={project.priority} onValueChange={(v) => updateProject.mutate({ priority: v as Priority })}>
-            <SelectTrigger
+            <SelectTrigger aria-label="Priority"
               className={cn("h-8 w-full max-w-xs px-2 text-sm font-medium", breatheClass(project.priority, project.status))}
             >
               <SelectValue />
