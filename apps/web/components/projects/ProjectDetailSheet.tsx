@@ -207,6 +207,7 @@ function ProjectDetailForm({
           <span className="text-muted-foreground">Start</span>
           <input
             type="date"
+            aria-label="Start date"
             value={startDateValue}
             onChange={(e) =>
               updateProject.mutate({ startDate: e.target.value ? new Date(`${e.target.value}T12:00:00Z`) : null })
@@ -219,6 +220,7 @@ function ProjectDetailForm({
           <span className="text-muted-foreground">Due</span>
           <input
             type="date"
+            aria-label="Due date"
             value={endDateValue}
             onChange={(e) =>
               updateProject.mutate({ endDate: e.target.value ? new Date(`${e.target.value}T12:00:00Z`) : null })

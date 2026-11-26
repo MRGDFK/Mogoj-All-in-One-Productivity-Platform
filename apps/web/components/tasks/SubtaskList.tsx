@@ -53,6 +53,7 @@ export function SubtaskList({ parentTask }: { parentTask: Task }) {
         <span className="text-xs font-medium text-muted-foreground">Deadline</span>
         <input
           type="date"
+          aria-label="Subtask deadline"
           value={draftDeadline}
           onChange={(e) => setDraftDeadline(e.target.value)}
           className="rounded-md border border-border px-2 py-1 text-xs text-muted-foreground"

@@ -289,6 +289,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
         <PropertyRow icon={Calendar} label="Start Date">
           <input
             type="date"
+            aria-label="Start date"
             value={startDateValue}
             onChange={(e) =>
               updateProject.mutate({ startDate: e.target.value ? new Date(`${e.target.value}T12:00:00Z`) : null })
@@ -301,6 +302,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
           <div className="flex items-center gap-2">
             <input
               type="date"
+              aria-label="Due date"
               value={endDateValue}
               onChange={(e) =>
                 updateProject.mutate({ endDate: e.target.value ? new Date(`${e.target.value}T12:00:00Z`) : null })

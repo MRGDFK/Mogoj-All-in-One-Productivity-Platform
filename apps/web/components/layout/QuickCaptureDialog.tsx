@@ -365,7 +365,7 @@ const TOOL_BTN =
   "spotlight flex h-10 items-center gap-1.5 rounded-full px-2.5 text-sm text-muted-foreground transition-colors duration-(--dur-fast) hover:bg-white/[0.06] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
 /**
- * Phones: a compact capture card docked right above the on-screen keyboard (TickTick-style),
+ * Phones: a compact capture card docked at the top of the screen, clear of the on-screen keyboard,
  * so the fields and the send button stay visible while typing. Inbox only, like the desktop dialog.
  */
 function CompactCaptureContent({ onClose }: { onClose: () => void }) {
@@ -403,9 +403,11 @@ function CompactCaptureContent({ onClose }: { onClose: () => void }) {
         e.preventDefault();
         titleRef.current?.focus();
       }}
-      className="glass-overlay fixed inset-x-3 z-50 flex flex-col overflow-y-auto rounded-3xl border border-white/12 p-3 transition-[bottom] duration-(--dur-fast) ease-soft focus:outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:slide-in-from-bottom-4"
+      className="glass-overlay fixed inset-x-3 z-50 flex flex-col overflow-y-auto rounded-3xl border border-white/12 p-3 duration-200 ease-soft focus:outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:slide-in-from-top-4 data-[state=closed]:slide-out-to-top-4"
       style={{
-        bottom: keyboard ? keyboard + 12 : "calc(0.75rem + env(safe-area-inset-bottom))",
+        // Top, not above the keyboard: Chrome Android's autofill strip covers the keyboard edge
+        // without being reported in visualViewport, and autoComplete="off" doesn't always stop it.
+        top: "calc(0.75rem + env(safe-area-inset-top))",
         maxHeight: `calc(100dvh - ${keyboard}px - 1.5rem - env(safe-area-inset-top))`,
         boxShadow: "inset 0 1px 0 rgb(255 255 255 / 0.1), 0 24px 64px rgb(0 0 0 / 0.5), 0 0 80px -12px rgb(124 156 255 / 0.4)",
       }}
@@ -451,7 +453,7 @@ function CompactCaptureContent({ onClose }: { onClose: () => void }) {
               <TypeIcon className="h-5 w-5" strokeWidth={1.75} />
               <span>{current.label}</span>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" side="top" className="w-40">
+            <DropdownMenuContent align="start" side="bottom" collisionPadding={12} className="w-40">
               {TYPES.map(({ value, label, icon: Icon }) => (
                 <DropdownMenuItem key={value} onSelect={() => setType(value)} className="gap-2.5">
                   <Icon className="h-4 w-4" /> {label}
@@ -469,7 +471,7 @@ function CompactCaptureContent({ onClose }: { onClose: () => void }) {
             <DropdownMenuTrigger aria-label="More options" className={cn(TOOL_BTN, "w-10 justify-center px-0")}>
               <MoreHorizontal className="h-5 w-5" />
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" side="top" className="w-48">
+            <DropdownMenuContent align="start" side="bottom" collisionPadding={12} className="w-48">
               {CREATE_ACTIONS.filter((a) => a.key !== "capture").map(({ key, label, icon: Icon }) => (
                 <DropdownMenuItem
                   key={key}

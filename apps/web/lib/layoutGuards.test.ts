@@ -53,6 +53,20 @@ describe("dropdowns have an accessible name", () => {
   });
 });
 
+describe("date and time fields have an accessible name", () => {
+  // An unnamed <input type="date"> only announces "Date, Day, Month, Year", not which date it sets.
+  it("every date/time input has aria-label, aria-labelledby, an id a <label> can point at, or is aria-hidden", () => {
+    const unnamed = [...tsxFiles(join(webRoot, "components")), ...tsxFiles(join(webRoot, "app"))].flatMap((file) => {
+      const src = readFileSync(file, "utf8");
+      return [...src.matchAll(/<[iI]nput\b[\s\S]*?\/>/g)]
+        .filter((m) => /type="(date|time|datetime-local)"/.test(m[0]))
+        .filter((m) => !/aria-label|aria-labelledby|\sid=|aria-hidden/.test(m[0]))
+        .map((m) => `${relative(webRoot, file)}:${src.slice(0, m.index).split("\n").length}`);
+    });
+    assert.deepEqual(unnamed, []);
+  });
+});
+
 describe("phone quick capture stays above the keyboard", () => {
   // Chrome Android's autofill strip (passwords/cards/addresses) sits on top of the keyboard but is not
   // part of visualViewport, so it covered the docked card (S24 recording, 2026-11-27). Keep it from showing.
@@ -62,6 +76,15 @@ describe("phone quick capture stays above the keyboard", () => {
     for (const tag of ["<form", "<input", "<textarea"]) {
       assert.match(compact, new RegExp(`${tag}\\s+autoComplete="off"`), `${tag} is missing autoComplete="off"`);
     }
+  });
+
+  // autoComplete="off" didn't stop the strip on the user's S24, so the card docks at the top instead,
+  // where neither the keyboard nor the strip can reach it.
+  it("the compact capture card is anchored to the top of the screen, not the keyboard", () => {
+    const src = read("components/layout/QuickCaptureDialog.tsx");
+    const style = /function CompactCaptureContent[\s\S]*?style=\{\{([\s\S]*?)\}\}/.exec(src)?.[1] ?? "";
+    assert.match(style, /top:/);
+    assert.doesNotMatch(style, /bottom:/);
   });
 });
 

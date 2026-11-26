@@ -203,6 +203,7 @@ function TaskDetailForm({
               <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
               <input
                 type="date"
+                aria-label="Due date"
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
                 onBlur={() => updateTask.mutate({ dueDate: dueDate ? new Date(`${dueDate}T12:00:00Z`) : null })}
