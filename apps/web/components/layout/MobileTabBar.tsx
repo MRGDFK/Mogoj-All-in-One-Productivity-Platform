@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { FolderKanban, LayoutDashboard, ListTodo, Menu, Plus, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { activeTab, type MobileTab } from "@/lib/mobileNav";
 import { useUIStore } from "@/store/useUIStore";
+import { useKeyboardInset } from "@/hooks/useKeyboardInset";
 
 const TAB =
   "flex h-12 flex-col items-center justify-center gap-0.5 rounded-full text-[11px] font-medium transition-colors duration-(--dur-fast) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
@@ -29,21 +29,9 @@ export function MobileTabBar() {
   const tab: MobileTab = activeTab(usePathname());
   const openMore = useUIStore((s) => s.setSidebarOpen);
   const openCapture = useUIStore((s) => s.setQuickCaptureOpen);
-  const [typing, setTyping] = useState(false);
-
-  // Step out of the way of the on-screen keyboard while a text field has focus
-  useEffect(() => {
-    const isField = (el: EventTarget | null) =>
-      el instanceof HTMLElement && (el.matches("input:not([type=checkbox]):not([type=radio]), textarea, select") || el.isContentEditable);
-    const onFocusIn = (e: FocusEvent) => setTyping(isField(e.target));
-    const onFocusOut = () => setTyping(false);
-    document.addEventListener("focusin", onFocusIn);
-    document.addEventListener("focusout", onFocusOut);
-    return () => {
-      document.removeEventListener("focusin", onFocusIn);
-      document.removeEventListener("focusout", onFocusOut);
-    };
-  }, []);
+  // Step out of the way only while the on-screen keyboard is actually open (a focused field alone,
+  // e.g. the Inbox page's autofocused input, doesn't open the keyboard on phones)
+  const typing = useKeyboardInset() > 0;
 
   return (
       <nav

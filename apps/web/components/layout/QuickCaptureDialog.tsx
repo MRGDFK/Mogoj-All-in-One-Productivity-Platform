@@ -1,15 +1,31 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import * as Dialog from "@radix-ui/react-dialog";
 import { m } from "motion/react";
 import { useQueryClient } from "@tanstack/react-query";
-import { ArrowUpRight, Inbox, Keyboard, Mic, MoreHorizontal, Settings, X } from "lucide-react";
+import {
+  ArrowUp,
+  ArrowUpRight,
+  Check,
+  FolderKanban,
+  Inbox,
+  Keyboard,
+  Lightbulb,
+  ListTodo,
+  Mic,
+  MoreHorizontal,
+  Settings,
+  StickyNote,
+  X,
+  type LucideIcon,
+} from "lucide-react";
 import { toast } from "sonner";
-import type { HQDashboard, InboxType } from "@mogoj/shared";
+import type { CreateInboxItemInput, HQDashboard, InboxType } from "@mogoj/shared";
 import { useCreateInboxItem, useUnprocessedInboxCount } from "@/hooks/useInbox";
 import { useQuickCaptureShortcut } from "@/hooks/useQuickCaptureShortcut";
+import { useKeyboardInset } from "@/hooks/useKeyboardInset";
 import { useUIStore } from "@/store/useUIStore";
 import { getApiErrorMessage } from "@/lib/api";
 import { buildInboxCapture } from "@/lib/inboxCapture";
@@ -19,11 +35,11 @@ import { Button } from "@/components/shared/Button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/shared/DropdownMenu";
 import { CREATE_ACTIONS, runCreateAction } from "@/components/layout/createActions";
 
-const TYPES: { value: InboxType; label: string }[] = [
-  { value: "task", label: "Task" },
-  { value: "idea", label: "Idea" },
-  { value: "note", label: "Note" },
-  { value: "project", label: "Project" },
+const TYPES: { value: InboxType; label: string; icon: LucideIcon }[] = [
+  { value: "task", label: "Task", icon: ListTodo },
+  { value: "idea", label: "Idea", icon: Lightbulb },
+  { value: "note", label: "Note", icon: StickyNote },
+  { value: "project", label: "Project", icon: FolderKanban },
 ];
 
 const ROUND_BTN =
@@ -36,6 +52,7 @@ export function QuickCaptureDialog() {
   const open = useUIStore((s) => s.quickCaptureOpen);
   const setOpen = useUIStore((s) => s.setQuickCaptureOpen);
   const { shortcut } = useQuickCaptureShortcut();
+  const phone = useIsPhone();
 
   useEffect(() => {
     const isMac = isMacPlatform();
@@ -53,16 +70,19 @@ export function QuickCaptureDialog() {
     <Dialog.Root open={open} onOpenChange={setOpen}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-black/55 backdrop-blur-[6px] duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
-        {/* Floating glass card everywhere: anchored near the top on phones (stays above the keyboard), centered from sm. */}
+        {phone ? (
+          <CompactCaptureContent onClose={() => setOpen(false)} />
+        ) : (
         <Dialog.Content
           aria-describedby={undefined}
-          className="glass-overlay fixed left-1/2 top-[max(0.75rem,env(safe-area-inset-top))] z-50 flex max-h-[calc(100dvh-1.5rem-env(safe-area-inset-top)-env(safe-area-inset-bottom))] w-[calc(100%-1.5rem)] max-w-xl -translate-x-1/2 flex-col overflow-y-auto rounded-3xl border border-white/12 p-4 duration-200 ease-soft focus:outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-[0.97] data-[state=closed]:zoom-out-[0.97] sm:top-1/2 sm:max-h-[calc(100dvh-3rem)] sm:-translate-y-1/2 sm:p-6"
+          className="glass-overlay fixed left-1/2 top-1/2 z-50 flex max-h-[calc(100dvh-3rem)] w-[calc(100%-2rem)] max-w-xl -translate-x-1/2 -translate-y-1/2 flex-col overflow-y-auto rounded-3xl border border-white/12 p-6 duration-200 ease-soft focus:outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-[0.97] data-[state=closed]:zoom-out-[0.97]"
           style={{ boxShadow: "inset 0 1px 0 rgb(255 255 255 / 0.1), 0 24px 64px rgb(0 0 0 / 0.5), 0 0 120px -8px rgb(124 156 255 / 0.45)" }}
         >
           <CaptureScreen onClose={() => setOpen(false)} />
           {/* Soft specular glint along the bottom edge */}
           <span aria-hidden className="pointer-events-none absolute inset-x-1/4 bottom-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent" />
         </Dialog.Content>
+        )}
       </Dialog.Portal>
     </Dialog.Root>
   );
@@ -85,23 +105,47 @@ function speechRecognition(): (new () => Recognition) | null {
   return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
 }
 
-// Mounted only while open, so every open starts empty
-function CaptureScreen({ onClose }: { onClose: () => void }) {
-  const router = useRouter();
+const PHONE = "(max-width: 639.98px)";
+const subscribePhone = (onChange: () => void) => {
+  const mq = window.matchMedia(PHONE);
+  mq.addEventListener("change", onChange);
+  return () => mq.removeEventListener("change", onChange);
+};
+/** Below sm: compact card docked above the keyboard; from sm: the full dialog. */
+const useIsPhone = () => useSyncExternalStore(subscribePhone, () => window.matchMedia(PHONE).matches, () => false);
+
+/** Saves to the Inbox with the instant count bump; rolls the counts back on failure. */
+function useSaveToInbox() {
   const queryClient = useQueryClient();
   const createInbox = useCreateInboxItem();
-  const { data: inboxCount } = useUnprocessedInboxCount();
-  const textRef = useRef<HTMLTextAreaElement>(null);
+  function save(item: CreateInboxItemInput) {
+    queryClient.setQueryData<number>(["inbox", "unprocessed-count"], (n) => (n ?? 0) + 1);
+    queryClient.setQueriesData<HQDashboard>({ queryKey: ["dashboard"] }, (old) =>
+      old && { ...old, inboxUnprocessedCount: old.inboxUnprocessedCount + 1 },
+    );
+    // Promise, not mutate() callbacks: the dialog closes (unmounts) right after saving, and TanStack
+    // skips per-call callbacks after unmount, which dropped the toast and the error rollback.
+    createInbox
+      .mutateAsync(item)
+      .then(() => toast.success("Saved to Inbox"))
+      .catch((err: unknown) => {
+        queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+        queryClient.invalidateQueries({ queryKey: ["inbox"] });
+        toast.error(getApiErrorMessage(err) || "Couldn't save to Inbox");
+      });
+  }
+  return { save, pending: createInbox.isPending };
+}
+
+/** Browser speech-to-text; `onHeard` receives each final transcript. Unsupported browsers get supported=false. */
+function useDictation(onHeard: (text: string) => void) {
   const recognitionRef = useRef<Recognition | null>(null);
   const [Speech] = useState(speechRecognition);
-  const [text, setText] = useState("");
-  const [type, setType] = useState<InboxType>("task");
   const [listening, setListening] = useState(false);
-  const mod = isMacPlatform() ? "⌘" : "Ctrl";
 
   useEffect(() => () => recognitionRef.current?.stop(), []);
 
-  function toggleSpeak() {
+  function toggle() {
     if (!Speech) return;
     if (listening) return recognitionRef.current?.stop();
     const rec = new Speech();
@@ -110,7 +154,7 @@ function CaptureScreen({ onClose }: { onClose: () => void }) {
     rec.continuous = false;
     rec.onresult = (e) => {
       const heard = Array.from(e.results, (r) => r[0]?.transcript ?? "").join(" ").trim();
-      if (heard) setText((t) => (t.trim() ? `${t.trimEnd()} ${heard}` : heard));
+      if (heard) onHeard(heard);
     };
     rec.onend = () => setListening(false);
     rec.onerror = (e) => {
@@ -122,23 +166,26 @@ function CaptureScreen({ onClose }: { onClose: () => void }) {
     setListening(true);
   }
 
+  return { supported: Boolean(Speech), listening, toggle };
+}
+
+const append = (current: string, heard: string) => (current.trim() ? `${current.trimEnd()} ${heard}` : heard);
+
+// Mounted only while open, so every open starts empty
+function CaptureScreen({ onClose }: { onClose: () => void }) {
+  const router = useRouter();
+  const { save, pending } = useSaveToInbox();
+  const { data: inboxCount } = useUnprocessedInboxCount();
+  const textRef = useRef<HTMLTextAreaElement>(null);
+  const [text, setText] = useState("");
+  const [type, setType] = useState<InboxType>("task");
+  const { supported: canSpeak, listening, toggle: toggleSpeak } = useDictation((heard) => setText((t) => append(t, heard)));
+  const mod = isMacPlatform() ? "⌘" : "Ctrl";
+
   function submit(keepOpen: boolean) {
     const item = buildInboxCapture(text, type);
-    if (!item || createInbox.isPending) return;
-
-    queryClient.setQueryData<number>(["inbox", "unprocessed-count"], (n) => (n ?? 0) + 1);
-    queryClient.setQueriesData<HQDashboard>({ queryKey: ["dashboard"] }, (old) =>
-      old && { ...old, inboxUnprocessedCount: old.inboxUnprocessedCount + 1 },
-    );
-    createInbox.mutate(item, {
-      onSuccess: () => toast.success("Saved to Inbox"),
-      onError: (err) => {
-        queryClient.invalidateQueries({ queryKey: ["dashboard"] });
-        queryClient.invalidateQueries({ queryKey: ["inbox"] });
-        toast.error(getApiErrorMessage(err) || "Couldn't save to Inbox");
-      },
-    });
-
+    if (!item || pending) return;
+    save(item);
     if (!keepOpen) return onClose();
     setText("");
     textRef.current?.focus();
@@ -210,7 +257,7 @@ function CaptureScreen({ onClose }: { onClose: () => void }) {
           >
             <Keyboard className="h-4 w-4" strokeWidth={1.75} /> Type
           </button>
-          {Speech && (
+          {canSpeak && (
             <button
               type="button"
               aria-pressed={listening}
@@ -250,7 +297,7 @@ function CaptureScreen({ onClose }: { onClose: () => void }) {
               );
             })}
           </div>
-          <Button type="submit" disabled={!text.trim() || createInbox.isPending} className="max-sm:w-full">
+          <Button type="submit" disabled={!text.trim() || pending} className="max-sm:w-full">
             Save to Inbox
           </Button>
         </div>
@@ -311,5 +358,160 @@ function ActionCard({
         <ArrowUpRight className="h-3.5 w-3.5" />
       </span>
     </button>
+  );
+}
+
+const TOOL_BTN =
+  "spotlight flex h-10 items-center gap-1.5 rounded-full px-2.5 text-sm text-muted-foreground transition-colors duration-(--dur-fast) hover:bg-white/[0.06] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
+
+/**
+ * Phones: a compact capture card docked right above the on-screen keyboard (TickTick-style),
+ * so the fields and the send button stay visible while typing. Inbox only, like the desktop dialog.
+ */
+function CompactCaptureContent({ onClose }: { onClose: () => void }) {
+  const router = useRouter();
+  const keyboard = useKeyboardInset();
+  const { save, pending } = useSaveToInbox();
+  const titleRef = useRef<HTMLInputElement>(null);
+  const descRef = useRef<HTMLTextAreaElement>(null);
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [type, setType] = useState<InboxType>("task");
+  const { supported: canSpeak, listening, toggle: toggleSpeak } = useDictation((heard) =>
+    // Dictation fills the title first, then the description
+    title.trim() ? setDescription((d) => append(d, heard)) : setTitle((t) => append(t, heard)),
+  );
+  const current = TYPES.find((t) => t.value === type) ?? TYPES[0]!;
+  const TypeIcon = current.icon;
+
+  function submit() {
+    const item = buildInboxCapture(`${title}\n${description}`, type);
+    if (!item || pending) return;
+    save(item);
+    onClose();
+  }
+
+  function go(href: string) {
+    onClose();
+    router.push(href);
+  }
+
+  return (
+    <Dialog.Content
+      aria-describedby={undefined}
+      onOpenAutoFocus={(e) => {
+        e.preventDefault();
+        titleRef.current?.focus();
+      }}
+      className="glass-overlay fixed inset-x-3 z-50 flex flex-col overflow-y-auto rounded-3xl border border-white/12 p-3 transition-[bottom] duration-(--dur-fast) ease-soft focus:outline-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:slide-in-from-bottom-4"
+      style={{
+        bottom: keyboard ? keyboard + 12 : "calc(0.75rem + env(safe-area-inset-bottom))",
+        maxHeight: `calc(100dvh - ${keyboard}px - 1.5rem - env(safe-area-inset-top))`,
+        boxShadow: "inset 0 1px 0 rgb(255 255 255 / 0.1), 0 24px 64px rgb(0 0 0 / 0.5), 0 0 80px -12px rgb(124 156 255 / 0.4)",
+      }}
+    >
+      <Dialog.Title className="sr-only">Quick Capture</Dialog.Title>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          submit();
+        }}
+      >
+        <input
+          ref={titleRef}
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              descRef.current?.focus();
+            }
+          }}
+          enterKeyHint="next"
+          aria-label="What would you like to capture?"
+          placeholder={listening && !title ? "Listening…" : "What would you like to capture?"}
+          className="w-full bg-transparent px-2 pt-1.5 text-lg font-medium text-foreground outline-none placeholder:text-muted-foreground"
+        />
+        <textarea
+          ref={descRef}
+          rows={2}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          aria-label="Description"
+          placeholder={listening && title ? "Listening…" : "Description"}
+          className="mt-1 max-h-32 w-full resize-none bg-transparent px-2 text-[15px] leading-relaxed text-foreground outline-none placeholder:text-muted-foreground [field-sizing:content]"
+        />
+
+        <div className="mt-2 flex items-center gap-0.5">
+          <DropdownMenu>
+            <DropdownMenuTrigger aria-label={`Save as ${current.label}`} className={TOOL_BTN}>
+              <TypeIcon className="h-5 w-5" strokeWidth={1.75} />
+              <span>{current.label}</span>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" side="top" className="w-40">
+              {TYPES.map(({ value, label, icon: Icon }) => (
+                <DropdownMenuItem key={value} onSelect={() => setType(value)} className="gap-2.5">
+                  <Icon className="h-4 w-4" /> {label}
+                  {value === type && <Check className="ml-auto h-4 w-4" />}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <span className="flex h-10 items-center gap-1.5 px-2 text-sm font-medium text-brand">
+            <Inbox className="h-5 w-5" strokeWidth={1.75} /> Inbox
+          </span>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger aria-label="More options" className={cn(TOOL_BTN, "w-10 justify-center px-0")}>
+              <MoreHorizontal className="h-5 w-5" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" side="top" className="w-48">
+              {CREATE_ACTIONS.filter((a) => a.key !== "capture").map(({ key, label, icon: Icon }) => (
+                <DropdownMenuItem
+                  key={key}
+                  onSelect={() => {
+                    onClose();
+                    runCreateAction(key);
+                  }}
+                  className="gap-2.5"
+                >
+                  <Icon className="h-4 w-4" /> {label}
+                </DropdownMenuItem>
+              ))}
+              <div role="separator" className="my-1 h-px bg-border" />
+              <DropdownMenuItem onSelect={() => go("/inbox")} className="gap-2.5">
+                <Inbox className="h-4 w-4" /> Open Inbox
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => go("/settings")} className="gap-2.5">
+                <Settings className="h-4 w-4" /> Change shortcut
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <div className="ml-auto flex items-center gap-1">
+            {canSpeak && (
+              <button
+                type="button"
+                aria-label={listening ? "Stop dictation" : "Dictate"}
+                aria-pressed={listening}
+                onClick={toggleSpeak}
+                className={cn(TOOL_BTN, "w-10 justify-center px-0", listening && "bg-primary/15 text-foreground")}
+              >
+                <Mic className="h-5 w-5" strokeWidth={1.75} />
+              </button>
+            )}
+            <button
+              type="submit"
+              aria-label="Save to Inbox"
+              disabled={!title.trim() || pending}
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground transition-opacity duration-(--dur-fast) disabled:opacity-40"
+            >
+              <ArrowUp className="h-5 w-5" strokeWidth={2} />
+            </button>
+          </div>
+        </div>
+      </form>
+    </Dialog.Content>
   );
 }
