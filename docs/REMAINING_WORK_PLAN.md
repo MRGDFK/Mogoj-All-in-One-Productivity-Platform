@@ -46,6 +46,8 @@ P1-7 activity rows show the item name (`metadata.title`) · P2-4 context-aware e
 ### Module 7 · Mobile & responsive (L) — detailed below
 Absorbs P1-14, P1-12, P2-17 and the phone part of P3-18.
 
+**Progress (2026-11-26):** R1, R4.1, R4.3 done. R2 shipped, then replaced below `lg` by the bottom bar (`MobileTabBar`: Home · Tasks · + · Projects · More) with a + action sheet (Quick capture / Add task / Add project / Add resource) and a More sheet. Quick Capture is now Inbox-only and redesigned (full-screen on phones, dialog on web); desktop sidebar has the same "+ New" menu. Next: R3, R5, then R4.2/R4.4–R4.6 and R6.
+
 ### Module 7b · PWA & theming (M)
 Roadmap P2-11 PWA/offline · P2-12 share target · P2-16 light theme.
 
