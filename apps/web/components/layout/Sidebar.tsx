@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import * as Dialog from "@radix-ui/react-dialog";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { m } from "motion/react";
 import {
   Inbox,
@@ -15,6 +15,8 @@ import {
   Compass,
   Settings,
   Plus,
+  Search,
+  LogOut,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -24,6 +26,11 @@ import { EntityIcon } from "@/components/shared/EntityIcon";
 import { MogojMark } from "@/components/layout/MogojMark";
 import { SheetContent } from "@/components/shared/Sheet";
 import { useUIStore } from "@/store/useUIStore";
+import { useAuthContext } from "@/providers/AuthProvider";
+import { useLogout } from "@/hooks/useAuth";
+import { Avatar } from "@/components/shared/Avatar";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/shared/DropdownMenu";
+import { CREATE_ACTIONS, runCreateAction } from "@/components/layout/createActions";
 
 const NAV_ITEMS = [
   { href: "/", label: "HQ", icon: LayoutDashboard },
@@ -80,10 +87,14 @@ const NAV_ROW =
   "relative flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-muted-foreground transition-colors duration-(--dur-fast) ease-soft hover:text-foreground";
 
 /** Sidebar contents, shared by the desktop column and the mobile drawer. */
-function SidebarNav({ pillId, onCapture }: { pillId: string; onCapture?: () => void }) {
+function SidebarNav({ pillId, mobile = false }: { pillId: string; mobile?: boolean }) {
   const pathname = usePathname();
   const { data: areas } = useAreas({ status: "active" });
   const { data: unprocessedCount } = useUnprocessedInboxCount();
+  const { user } = useAuthContext();
+  const logout = useLogout();
+  const router = useRouter();
+  const ui = useUIStore.getState;
 
   return (
     <>
@@ -94,8 +105,42 @@ function SidebarNav({ pillId, onCapture }: { pillId: string; onCapture?: () => v
         </Link>
       </div>
 
+      {!mobile && (
+        <div className="px-3 pb-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger className="flex w-full items-center gap-2.5 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm font-medium transition-colors duration-(--dur-fast) hover:bg-white/[0.07] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+              <Plus className="h-4 w-4" strokeWidth={1.75} />
+              New
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-56">
+              {CREATE_ACTIONS.map(({ key, label, icon: Icon }) => (
+                <DropdownMenuItem key={key} onSelect={() => runCreateAction(key)} className="gap-2.5">
+                  <Icon className="h-4 w-4" strokeWidth={1.75} />
+                  {label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      )}
+
       <nav className="flex-1 space-y-6 overflow-y-auto px-3 py-2">
         <div>
+          {mobile && (
+            <button
+              type="button"
+              onClick={() => {
+                ui().setSidebarOpen(false);
+                requestAnimationFrame(() => ui().setPaletteOpen(true));
+              }}
+              className={NAV_ROW}
+            >
+              <span className="flex w-4 shrink-0 justify-center">
+                <Search className="h-4 w-4" strokeWidth={1.75} />
+              </span>
+              Search
+            </button>
+          )}
           <NavLink
             pillId={pillId}
             href="/inbox"
@@ -138,17 +183,26 @@ function SidebarNav({ pillId, onCapture }: { pillId: string; onCapture?: () => v
       </nav>
 
       <div className="border-t border-border p-3">
-        {onCapture && (
-          <button type="button" onClick={onCapture} className={NAV_ROW}>
-            <span className="flex w-4 shrink-0 justify-center">
-              <Plus className="h-4 w-4" strokeWidth={1.75} />
-            </span>
-            Quick capture
-          </button>
-        )}
         <NavLink pillId={pillId} href="/settings" active={pathname === "/settings"} icon={Settings}>
           Settings
         </NavLink>
+        {mobile && user && (
+          <div className="mt-2 flex items-center gap-2.5 border-t border-border px-3 pt-3">
+            <Avatar name={user.name} src={user.avatar} />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium">{user.name}</p>
+              <p className="truncate text-xs text-muted-foreground">{user.email}</p>
+            </div>
+            <button
+              type="button"
+              aria-label="Log out"
+              onClick={() => logout.mutate(undefined, { onSuccess: () => router.push("/login") })}
+              className="touch-hit relative rounded-lg p-2 text-destructive hover:bg-white/[0.05]"
+            >
+              <LogOut className="h-4 w-4" />
+            </button>
+          </div>
+        )}
       </div>
     </>
   );
@@ -158,7 +212,6 @@ export function Sidebar() {
   const pathname = usePathname();
   const open = useUIStore((s) => s.sidebarOpen);
   const setOpen = useUIStore((s) => s.setSidebarOpen);
-  const setQuickCaptureOpen = useUIStore((s) => s.setQuickCaptureOpen);
 
   // Close the drawer after navigating, and if the window grows into the desktop layout
   useEffect(() => setOpen(false), [pathname, setOpen]);
@@ -177,17 +230,11 @@ export function Sidebar() {
       <SheetContent
         open={open}
         onOpenChange={setOpen}
-        side="left"
-        className="max-w-[min(18rem,85vw)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] pt-[env(safe-area-inset-top)]"
+        side="right"
+        className="max-w-[min(18rem,85vw)] pb-[env(safe-area-inset-bottom)] pr-[env(safe-area-inset-right)] pt-[env(safe-area-inset-top)]"
       >
-        <Dialog.Title className="sr-only">Navigation</Dialog.Title>
-        <SidebarNav
-          pillId="drawer-active-pill"
-          onCapture={() => {
-            setOpen(false);
-            setQuickCaptureOpen(true);
-          }}
-        />
+        <Dialog.Title className="sr-only">More</Dialog.Title>
+        <SidebarNav pillId="drawer-active-pill" mobile />
       </SheetContent>
     </>
   );

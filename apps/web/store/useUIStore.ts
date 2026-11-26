@@ -20,6 +20,13 @@ interface UIState {
   quickCaptureOpen: boolean;
   setQuickCaptureOpen: (open: boolean) => void;
 
+  // App-wide create dialogs, opened from the + menus (bottom bar, sidebar, Quick Capture)
+  createDialog: "task" | "project" | "resource" | null;
+  setCreateDialog: (dialog: "task" | "project" | "resource" | null) => void;
+
+  paletteOpen: boolean;
+  setPaletteOpen: (open: boolean) => void;
+
   processInboxItemId: string | null;
   openProcessModal: (inboxItemId: string) => void;
   closeProcessModal: () => void;
@@ -45,6 +52,12 @@ export const useUIStore = create<UIState>((set) => ({
 
   quickCaptureOpen: false,
   setQuickCaptureOpen: (open) => set({ quickCaptureOpen: open }),
+
+  createDialog: null,
+  setCreateDialog: (dialog) => set({ createDialog: dialog }),
+
+  paletteOpen: false,
+  setPaletteOpen: (open) => set({ paletteOpen: open }),
 
   processInboxItemId: null,
   openProcessModal: (inboxItemId) => set({ processInboxItemId: inboxItemId }),
