@@ -228,12 +228,12 @@ export default function TasksPage({ searchParams }: { searchParams: Promise<{ du
 
       <TaskMetricStrip tasks={visibleTasks} isLoading={isLoading} />
 
-      <div className="mb-4 flex items-center justify-between gap-2">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
         <ViewToggle value={view} onChange={setView} options={VIEW_OPTIONS} />
         <div className="flex gap-2">
           {view === "kanban" && (
             <Select value={quickAddTarget ?? undefined} onValueChange={chooseQuickAddTarget}>
-              <SelectTrigger aria-label="Quick add to" className="h-9 w-56">
+              <SelectTrigger aria-label="Quick add to" className="h-9 w-44 sm:w-56">
                 <SelectValue placeholder="Quick add to…" />
               </SelectTrigger>
               <SelectContent>

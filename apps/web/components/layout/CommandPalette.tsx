@@ -95,7 +95,7 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
             </Dialog.Overlay>
             <Dialog.Content asChild forceMount>
               <m.div
-                className="glass-overlay fixed left-1/2 top-[18vh] z-50 w-full max-w-xl -translate-x-1/2 overflow-hidden rounded-2xl focus:outline-none"
+                className="glass-overlay fixed left-1/2 top-[18vh] z-50 w-full max-w-xl -translate-x-1/2 overflow-hidden rounded-2xl focus:outline-none max-sm:inset-0 max-sm:flex max-sm:max-w-none max-sm:translate-x-0 max-sm:flex-col max-sm:rounded-none max-sm:border-0 max-sm:pb-[env(safe-area-inset-bottom)] max-sm:pt-[env(safe-area-inset-top)]"
                 initial={{ opacity: 0, scale: 0.97, y: -6 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.97, y: -6 }}
@@ -103,7 +103,7 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
               >
           <Dialog.Title className="sr-only">Search</Dialog.Title>
           {/* Server search already filters results; we filter pages ourselves */}
-          <CommandPrimitive shouldFilter={false} loop>
+          <CommandPrimitive shouldFilter={false} loop className="max-sm:flex max-sm:min-h-0 max-sm:flex-1 max-sm:flex-col">
             <div className="flex items-center gap-2.5 border-b border-border px-4">
               <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
               <CommandPrimitive.Input
@@ -112,8 +112,10 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
                 placeholder="Search or jump to"
                 className="h-12 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
               />
+              {/* Full-screen on phones hides the overlay, so give an explicit way out */}
+              <Dialog.Close className="shrink-0 text-sm text-muted-foreground hover:text-foreground sm:hidden">Cancel</Dialog.Close>
             </div>
-            <CommandPrimitive.List className="max-h-[50vh] overflow-y-auto py-2">
+            <CommandPrimitive.List className="max-h-[50vh] overflow-y-auto py-2 max-sm:max-h-none max-sm:flex-1">
               <CommandPrimitive.Empty className="px-4 py-6 text-center text-sm text-muted-foreground">
                 No results
               </CommandPrimitive.Empty>

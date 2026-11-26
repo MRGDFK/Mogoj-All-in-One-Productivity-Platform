@@ -33,7 +33,7 @@ export function Modal({ open, onOpenChange, title, description, children, classN
                 </Dialog.Description>
               )}
             </div>
-            <Dialog.Close className="rounded-sm text-muted-foreground hover:text-foreground">
+            <Dialog.Close aria-label="Close" className="touch-hit relative rounded-sm text-muted-foreground hover:text-foreground">
               <X className="h-4 w-4" />
             </Dialog.Close>
           </div>

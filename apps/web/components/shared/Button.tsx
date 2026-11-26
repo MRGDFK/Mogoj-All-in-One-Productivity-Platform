@@ -19,7 +19,7 @@ const buttonVariants = cva(
         sm: "h-8 px-3",
         md: "h-9 px-4",
         lg: "h-10 px-6",
-        icon: "h-9 w-9",
+        icon: "touch-hit relative h-9 w-9",
       },
     },
     defaultVariants: {

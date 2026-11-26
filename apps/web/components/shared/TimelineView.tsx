@@ -482,7 +482,7 @@ function Bar({
         onPointerDown={(e) => onPointerDown(e, item, "resize")}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
-        className="absolute inset-y-0 right-0 w-2 cursor-ew-resize rounded-r-md opacity-0 transition-opacity group-hover/bar:bg-white/20 group-hover/bar:opacity-100"
+        className="absolute inset-y-0 right-0 w-2 cursor-ew-resize rounded-r-md opacity-0 transition-opacity group-hover/bar:bg-white/20 group-hover/bar:opacity-100 [@media(hover:none)]:bg-white/20 [@media(hover:none)]:opacity-100"
       />
     </div>
   );

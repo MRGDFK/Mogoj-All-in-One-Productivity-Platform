@@ -32,7 +32,7 @@ export function ViewToggle<T extends string>({ value, onChange, options }: ViewT
             aria-pressed={active}
             onClick={() => onChange(option.value)}
             className={cn(
-              "relative flex items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium transition-colors duration-(--dur-fast)",
+              "relative flex items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium transition-colors duration-(--dur-fast) max-sm:px-2.5 max-sm:py-2",
               active ? "text-foreground" : "text-muted-foreground hover:text-foreground",
             )}
           >
@@ -44,7 +44,7 @@ export function ViewToggle<T extends string>({ value, onChange, options }: ViewT
               />
             )}
             <Icon className="relative h-4 w-4" />
-            <span className="relative">{option.label}</span>
+            <span className="relative max-sm:sr-only">{option.label}</span>
           </button>
         );
       })}

@@ -108,6 +108,17 @@ html {
     0 24px 64px rgb(0 0 0 / 0.5);
 }
 
+/* Touch: an invisible >=44px hit area around small icon buttons. The element must be positioned. */
+@utility touch-hit {
+  @media (pointer: coarse) {
+    &::after {
+      content: "";
+      position: absolute;
+      inset: min(0px, calc((100% - 44px) / 2));
+    }
+  }
+}
+
 /* Repeated cards: machined graphite sitting on the frosted glass. No blur (perf). */
 @utility surface-card {
   background-color: rgb(255 255 255 / 0.035);
@@ -308,5 +319,35 @@ body::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/*
+ * iOS Safari zooms the page when a focused field is under 16px. On touch devices,
+ * raise fields to 16px: inherited sizes via the base layer (explicit text-* still
+ * wins, so large title inputs keep their size), and the small text-xs/text-sm
+ * utilities via this unlayered rule, which beats Tailwind's utilities layer.
+ */
+@layer base {
+  @media (pointer: coarse) {
+    input,
+    textarea,
+    select {
+      font-size: 16px;
+    }
+  }
+}
+@media (pointer: coarse) {
+  :is(input, textarea, select):is(
+      .text-xs,
+      .text-sm,
+      .text-\[10px\],
+      .text-\[11px\],
+      .text-\[12px\],
+      .text-\[13px\],
+      .text-\[14px\],
+      .text-\[15px\]
+    ) {
+    font-size: 16px;
   }
 }

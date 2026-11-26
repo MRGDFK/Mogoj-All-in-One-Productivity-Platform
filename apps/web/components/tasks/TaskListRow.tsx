@@ -32,34 +32,39 @@ function TaskListRowImpl({ task, onClick, onMenuClick }: TaskListRowProps) {
           e.stopPropagation();
           updateTask.mutate({ status: task.status === "done" ? "todo" : "done" });
         }}
-        className="shrink-0 text-muted-foreground hover:text-primary"
+        className="touch-hit relative shrink-0 text-muted-foreground hover:text-primary"
         aria-label="Toggle complete"
       >
         <CompletionIcon done={task.status === "done"} className="h-4 w-4" />
       </button>
 
-      <button type="button" onClick={onClick} className="row-nudge min-w-0 flex-1 cursor-pointer text-left">
-        <p className={cn("truncate text-sm font-medium", task.status === "done" && "text-muted-foreground line-through")}>
-          {task.title}
-        </p>
-      </button>
+      {/* Phones: badges drop under the title so it gets the full width. From sm up the wrapper is display:contents (desktop row unchanged). */}
+      <div className="flex min-w-0 flex-1 flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
+        <button type="button" onClick={onClick} className="row-nudge min-w-0 flex-1 cursor-pointer text-left">
+          <p className={cn("truncate text-sm font-medium", task.status === "done" && "text-muted-foreground line-through")}>
+            {task.title}
+          </p>
+        </button>
 
-      {task.area?.name && (
-        <span className="hidden shrink-0 items-center gap-1 text-xs text-muted-foreground sm:flex">
-          <EntityIcon icon={task.area.icon} color={task.area.color} size={14} />
-          {task.area.name}
-        </span>
-      )}
+        {task.area?.name && (
+          <span className="hidden shrink-0 items-center gap-1 text-xs text-muted-foreground sm:flex">
+            <EntityIcon icon={task.area.icon} color={task.area.color} size={14} />
+            {task.area.name}
+          </span>
+        )}
 
-      {task.project?.name && (
-        <span className="hidden shrink-0 items-center gap-1 text-xs text-muted-foreground md:flex">
-          <EntityIcon icon={task.project.icon} color={task.project.color} size={12} fallback={FolderKanban} />
-          {task.project.name}
-        </span>
-      )}
+        {task.project?.name && (
+          <span className="hidden shrink-0 items-center gap-1 text-xs text-muted-foreground md:flex">
+            <EntityIcon icon={task.project.icon} color={task.project.color} size={12} fallback={FolderKanban} />
+            {task.project.name}
+          </span>
+        )}
 
-      <PriorityBadge priority={task.priority} status={task.status} />
-      <DeadlineBadge dueDate={task.dueDate} />
+        <div className="flex items-center gap-1.5 empty:hidden sm:contents">
+          <PriorityBadge priority={task.priority} status={task.status} />
+          <DeadlineBadge dueDate={task.dueDate} />
+        </div>
+      </div>
 
       <div className="row-actions flex shrink-0 items-center gap-0.5">
         <button
@@ -68,7 +73,7 @@ function TaskListRowImpl({ task, onClick, onMenuClick }: TaskListRowProps) {
             e.stopPropagation();
             dateRef.current?.showPicker();
           }}
-          className="relative rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+          className="touch-hit relative rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
           aria-label="Set due date"
         >
           <CalendarPlus className="h-4 w-4" />
@@ -91,7 +96,7 @@ function TaskListRowImpl({ task, onClick, onMenuClick }: TaskListRowProps) {
               e.stopPropagation();
               onMenuClick();
             }}
-            className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+            className="touch-hit relative rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
             aria-label="More actions"
           >
             <MoreHorizontal className="h-4 w-4" />

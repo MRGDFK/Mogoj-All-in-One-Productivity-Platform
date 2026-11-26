@@ -20,7 +20,7 @@ export function TaskCard({ task, onClick, onMenuClick }: TaskCardProps) {
     <div className="surface-card spotlight group relative rounded-xl p-3 transition-[border-color] duration-(--dur-fast) hover:border-white/[0.14]">
       <div className="absolute right-2 top-2">
         <DropdownMenu.Root>
-          <DropdownMenu.Trigger className="rounded p-0.5 text-muted-foreground opacity-0 transition-opacity hover:text-muted-foreground group-hover:opacity-100">
+          <DropdownMenu.Trigger aria-label="More actions" className="touch-hit relative rounded p-0.5 text-muted-foreground opacity-0 transition-opacity hover:text-muted-foreground group-hover:opacity-100 [@media(hover:none)]:opacity-100">
             <MoreHorizontal className="h-4 w-4" />
           </DropdownMenu.Trigger>
           <DropdownMenu.Portal>

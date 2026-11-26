@@ -92,7 +92,7 @@ function SubtaskRow({ subtask }: { subtask: Task }) {
         type="button"
         aria-label="Delete subtask"
         onClick={() => deleteSubtask.mutate(subtask.id)}
-        className="shrink-0 text-muted-foreground opacity-0 hover:text-red-400 group-hover:opacity-100"
+        className="touch-hit relative shrink-0 text-muted-foreground opacity-0 hover:text-red-400 group-hover:opacity-100 [@media(hover:none)]:opacity-100"
       >
         <Trash2 className="h-3.5 w-3.5" />
       </button>

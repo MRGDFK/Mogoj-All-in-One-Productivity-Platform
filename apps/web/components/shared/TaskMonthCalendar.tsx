@@ -210,7 +210,7 @@ function DayCell({
           type="button"
           onClick={onAdd}
           aria-label={`Add task on ${cellKey}`}
-          className="flex h-5 w-5 items-center justify-center rounded text-muted-foreground opacity-0 transition-opacity duration-(--dur-fast) hover:bg-accent hover:text-foreground focus-visible:opacity-100 group-hover/cell:opacity-100 [@media(hover:none)]:opacity-100"
+          className="touch-hit relative flex h-5 w-5 items-center justify-center rounded text-muted-foreground opacity-0 transition-opacity duration-(--dur-fast) hover:bg-accent hover:text-foreground focus-visible:opacity-100 group-hover/cell:opacity-100 [@media(hover:none)]:opacity-100"
         >
           <Plus className="h-3.5 w-3.5" />
         </button>

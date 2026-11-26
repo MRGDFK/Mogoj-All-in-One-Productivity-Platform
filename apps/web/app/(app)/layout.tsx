@@ -18,7 +18,7 @@ export default function ProtectedLayout({ children }: { children: React.ReactNod
 
   if (isLoading || !user) {
     return (
-      <div className="flex h-screen items-center justify-center">
+      <div className="flex h-dvh items-center justify-center">
         <Loader label="Loading Mogoj…" />
       </div>
     );

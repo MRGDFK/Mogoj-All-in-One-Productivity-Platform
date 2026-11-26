@@ -153,7 +153,7 @@ export default function ProjectsPage() {
 
       <PortfolioMetricStrip projects={visibleProjects} />
 
-      <div className="mb-4 flex items-center justify-between gap-2">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
         <ViewToggle value={view} onChange={setView} options={VIEW_OPTIONS} />
         <div className="flex gap-2">
           <FilterPopover fields={filterFields} value={filters} onChange={setFilters} />

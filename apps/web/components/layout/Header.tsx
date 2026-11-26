@@ -4,11 +4,12 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
-import { ChevronDown, Search, LogOut, Settings } from "lucide-react";
+import { ChevronDown, Search, LogOut, Settings, Menu } from "lucide-react";
 import { useAuthContext } from "@/providers/AuthProvider";
 import { useLogout } from "@/hooks/useAuth";
 import { Avatar } from "@/components/shared/Avatar";
 import { CommandPalette } from "@/components/layout/CommandPalette";
+import { useUIStore } from "@/store/useUIStore";
 
 const MENU_POP =
   "duration-150 ease-soft data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-[0.98] data-[state=closed]:zoom-out-[0.98] data-[side=bottom]:slide-in-from-top-1";
@@ -18,26 +19,38 @@ export function Header() {
   const logout = useLogout();
   const router = useRouter();
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const openNav = useUIStore((s) => s.setSidebarOpen);
 
   return (
-    <header className="glass flex h-14 shrink-0 items-center justify-between gap-4 rounded-2xl px-3">
-      <button
-        type="button"
-        onClick={() => setPaletteOpen(true)}
-        className="flex h-9 w-full max-w-sm items-center gap-2.5 rounded-lg bg-white/[0.04] px-3 text-sm text-muted-foreground transition-colors duration-(--dur-fast) hover:bg-white/[0.07] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-      >
-        <Search className="h-4 w-4" strokeWidth={1.75} />
-        <span className="flex-1 text-left">Search</span>
-        <kbd className="rounded-md border border-border bg-white/[0.04] px-1.5 py-0.5 font-mono text-[11px]">⌘K</kbd>
-      </button>
+    <header className="glass flex h-14 shrink-0 items-center justify-between gap-2 rounded-2xl px-2 sm:gap-4 sm:px-3">
+      <div className="flex min-w-0 flex-1 items-center gap-1.5">
+        <button
+          type="button"
+          aria-label="Open navigation"
+          onClick={() => openNav(true)}
+          className="touch-hit relative flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors duration-(--dur-fast) hover:bg-white/[0.05] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:hidden"
+        >
+          <Menu className="h-5 w-5" strokeWidth={1.75} />
+        </button>
+        <button
+          type="button"
+          aria-label="Search"
+          onClick={() => setPaletteOpen(true)}
+          className="touch-hit relative flex h-9 w-full max-w-sm items-center gap-2.5 rounded-lg bg-white/[0.04] px-3 text-sm text-muted-foreground transition-colors duration-(--dur-fast) hover:bg-white/[0.07] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring max-sm:w-9 max-sm:justify-center max-sm:px-0"
+        >
+          <Search className="h-4 w-4 shrink-0" strokeWidth={1.75} />
+          <span className="flex-1 text-left max-sm:hidden">Search</span>
+          <kbd className="rounded-md border border-border bg-white/[0.04] px-1.5 py-0.5 font-mono text-[11px] max-sm:hidden pointer-coarse:hidden">⌘K</kbd>
+        </button>
+      </div>
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
 
       {user && (
         <DropdownMenu.Root>
-          <DropdownMenu.Trigger className="flex items-center gap-2.5 rounded-xl py-1 pl-1 pr-2 transition-colors duration-(--dur-fast) hover:bg-white/[0.05] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          <DropdownMenu.Trigger aria-label="Account menu" className="flex shrink-0 items-center gap-2.5 rounded-xl py-1 pl-1 pr-2 transition-colors duration-(--dur-fast) hover:bg-white/[0.05] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
             <Avatar name={user.name} src={user.avatar} />
-            <span className="text-sm">{user.name}</span>
-            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+            <span className="max-w-40 truncate text-sm max-sm:hidden">{user.name}</span>
+            <ChevronDown className="h-4 w-4 text-muted-foreground max-sm:hidden" />
           </DropdownMenu.Trigger>
           <DropdownMenu.Portal>
             <DropdownMenu.Content

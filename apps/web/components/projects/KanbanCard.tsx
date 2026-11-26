@@ -105,7 +105,7 @@ function KanbanCardImpl({ id, priority, breathing, onOpen, onDelete, children }:
               onClick={(e) => e.stopPropagation()}
               onPointerDown={(e) => e.stopPropagation()}
               className={cn(
-                "absolute right-2 rounded-md p-1 text-muted-foreground opacity-0 transition-opacity duration-(--dur-fast) hover:bg-accent hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100",
+                "touch-hit absolute right-2 rounded-md p-1 text-muted-foreground opacity-0 transition-opacity duration-(--dur-fast) hover:bg-accent hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100",
                 priority ? "top-8" : "top-2",
               )}
               aria-label="More actions"

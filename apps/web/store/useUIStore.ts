@@ -26,7 +26,8 @@ interface UIState {
 }
 
 export const useUIStore = create<UIState>((set) => ({
-  sidebarOpen: true,
+  // Mobile nav drawer (below lg). The desktop sidebar is always shown.
+  sidebarOpen: false,
   toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
   setSidebarOpen: (open) => set({ sidebarOpen: open }),
 

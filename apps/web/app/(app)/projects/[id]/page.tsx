@@ -293,7 +293,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
             onChange={(e) =>
               updateProject.mutate({ startDate: e.target.value ? new Date(`${e.target.value}T12:00:00Z`) : null })
             }
-            className="border-none bg-transparent p-0 text-sm font-medium outline-none"
+            className="min-w-0 max-w-full border-none bg-transparent p-0 text-sm font-medium outline-none"
           />
         </PropertyRow>
 
@@ -305,7 +305,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
               onChange={(e) =>
                 updateProject.mutate({ endDate: e.target.value ? new Date(`${e.target.value}T12:00:00Z`) : null })
               }
-              className="border-none bg-transparent p-0 text-sm font-medium outline-none"
+              className="min-w-0 max-w-full border-none bg-transparent p-0 text-sm font-medium outline-none"
             />
             {deadline && <span className="text-xs text-muted-foreground">({deadline.label})</span>}
           </div>
@@ -346,7 +346,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
 
         {/* Tasks Tab Content */}
         <TabsContent value="tasks">
-          <div className="mb-4 flex items-center justify-between gap-2">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
             <ViewToggle value={taskView} onChange={setTaskView} options={TASK_VIEW_OPTIONS} />
             <div className="flex gap-2">
               <FilterPopover fields={filterFields} value={filters} onChange={setFilters} />

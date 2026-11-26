@@ -115,7 +115,7 @@ function QuickCaptureButton() {
     >
       <Plus className="h-4 w-4" />
       Quick capture
-      <span className="flex gap-0.5">
+      <span className="flex gap-0.5 pointer-coarse:hidden">
         {formatShortcut(shortcut, isMacPlatform()).map((k) => (
           <kbd key={k} className="rounded border border-white/10 bg-white/[0.04] px-1 font-mono text-[10px]">
             {k}
